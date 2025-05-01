@@ -69,7 +69,9 @@ function(input, output, session) {
 # Curve_Data --------------------------------------------------------------
   df_curve <- eventReactive(input$upldData_Butn, {
     
-    df_curve_1 <- readRDS("data/DF_Curve.rds") %>% filter(AGI %in% data_values$agi_list) %>% unnest()
+    df_curve_4_8 <- readRDS("data/DF_Curve_2.rds")
+    df_curve_all <- readRDS("data/DF_Curve_1.rds") %>% rbind(df_curve_4_8)
+    df_curve_1 <- df_curve_all %>% filter(AGI %in% data_values$agi_list) %>% unnest()
     df_curve_2 <- df_point_mean() %>% filter(AGI %in% setdiff(data_values$agi_list, df_curve_1$AGI)) %>% 
       mutate(Lower = NA, 
              Upper = NA,
