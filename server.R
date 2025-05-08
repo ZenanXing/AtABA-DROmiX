@@ -16,10 +16,29 @@ function(input, output, session) {
                               }
                             }
                           } else {
-                            req(input$text1)
-                            # Input the string from textArea
-                            tmp <- matrix(strsplit(input$text1, "\n")[[1]])
-                            data <- data.frame(AGI = tmp)
+                            if (input$input_select == "slt") {
+                              df_all <- readRDS("data/ED_related.rds") %>% dplyr::select(AGI, Cluster, Trend, Sensitivity)
+                              if (input$class_tp == "clst") {
+                                data <- df_all %>% filter(Cluster == as.integer(input$class_1))
+                              } else {
+                                data_temp <- df_all %>% filter(Trend == input$class_2)
+                                if (input$class_2 == "Bell") {
+                                  data <- data_temp %>% filter(Sensitivity == input$class_3_1)
+                                } else {
+                                  if (input$class_2 == "Up") {
+                                    data <- data_temp %>% filter(Sensitivity == input$class_3_2)
+                                  } else {
+                                    data <- data_temp %>% filter(Sensitivity == input$class_3_3)
+                                  }
+                                }
+                              }
+                              data <- data.frame(AGI = data$AGI)
+                            } else {
+                              req(input$text1)
+                              # Input the string from textArea
+                              tmp <- matrix(strsplit(input$text1, "\n")[[1]])
+                              data <- data.frame(AGI = tmp) 
+                            }
                           }
                           return(data)   
                         })
@@ -33,9 +52,9 @@ function(input, output, session) {
 
 # Gene_Description --------------------------------------------------------
   df_desc <- eventReactive(input$upldData_Butn, {
-                          desc <- readRDS("data/ATGeneDescription.rds") %>% filter(AGI %in% data_values$agi_list)
-                          return(desc)
-                        })
+    desc <- readRDS("data/ATGeneDescription.rds") %>% filter(AGI %in% data_values$agi_list)
+    return(desc)
+  })
 
 # Pairwise Comparison -----------------------------------------------------
   df_pc <- eventReactive(input$upldData_Butn, {
@@ -45,6 +64,7 @@ function(input, output, session) {
   
 
 # ED-related Table --------------------------------------------------------
+  
   df_ed <- eventReactive(input$upldData_Butn, {
     ed <- readRDS("data/ED_related.rds") %>% filter(AGI %in% data_values$agi_list)
     return(ed)
@@ -68,7 +88,6 @@ function(input, output, session) {
   
 # Curve_Data --------------------------------------------------------------
   df_curve <- eventReactive(input$upldData_Butn, {
-    
     df_curve_4_8 <- readRDS("data/DF_Curve_2.rds")
     df_curve_all <- readRDS("data/DF_Curve_1.rds") %>% rbind(df_curve_4_8)
     df_curve_1 <- df_curve_all %>% filter(AGI %in% data_values$agi_list) %>% unnest()
@@ -165,7 +184,7 @@ function(input, output, session) {
       cluster_rows = FALSE,
       cluster_cols = FALSE,
       column_text_angle = 0,
-      grid_color = "white", grid_size = 0.1,
+      #grid_color = "white", grid_size = 0.1*5/data_values$n,
       dendrogram = "none",
       seriate = "none",
       main = "ABA vs Mock",
@@ -258,7 +277,7 @@ function(input, output, session) {
       dplyr::select(AGI, tair_symbol) %>% 
       left_join(df_ed(), by = "AGI") %>% 
       arrange(factor(AGI, levels = data_values$agi_list))
-    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Membership", "Maximum_Response", "Minimum_Response",
+    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Trend", "Sensitivity", "Membership", "Maximum_Response", "Minimum_Response",
                            "Response_at_BMD", "BMD", "BMD_LowerBound", "BMD_UpperBound", 
                            "Response_at_Low_ED50", "Low_ED50", "Low_ED50_LowerBound", "Low_ED50_UpperBound", 
                            "Response_at_High_ED50", "High_ED50", "High_ED50_LowerBound", "High_ED50_UpperBound", 
@@ -274,12 +293,12 @@ function(input, output, session) {
     
     req(df_ed_exp())
     df_temp <- df_ed_exp() %>% 
-      dplyr::select(1:2, 12:14, 8:10) %>% 
+      dplyr::select(1:5, 14:16, 10:12) %>% 
       filter(!is.na(Low_ED50)|!is.na(BMD))
-    colnames(df_temp) <- c("AGI", "TAIR_Symbol", 
+    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Trend", "Sensitivity", 
                            "ED\u2085\u2080", "ED\u2085\u2080\nLowerBound", "ED\u2085\u2080\nUpperBound", 
                            HTML("BMD<sub>1SD</sub>"), HTML("BMD<sub>1SD</sub>\nLowerBound"), HTML("BMD<sub>1SD</sub>\nUpperBound"))
-    df_temp <- df_temp %>% mutate(across(3:ncol(df_temp), ~ map_chr(.x, display_format)))
+    df_temp <- df_temp %>% mutate(across(6:ncol(df_temp), ~ map_chr(.x, display_format)))
     return(df_temp)
     
   })

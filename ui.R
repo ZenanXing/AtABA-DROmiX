@@ -37,6 +37,7 @@ navbarPage(
         selectInput(inputId = "input_select",
                     label = "",
                     choices = c("Paste the list" = "pst",
+                                "Select a specific ABA responder group" = "slt",
                                 "Upload the list" = "upld"),
                     selected = "pst"),
         
@@ -58,6 +59,57 @@ navbarPage(
                          # Clear the list
                          actionButton(inputId = "clearText_Butn", 
                                       label = "Clear list")
+                         
+        ),
+        
+        # Select a specific ABA responder group
+        conditionalPanel(condition = "input.input_select == 'slt'", 
+                         
+                         # Radio buttons
+                         radioButtons(inputId = "class_tp", 
+                                      label = NULL,
+                                      choices = c("by Cluster" = "clst",
+                                                  "by Sensitivity" = "sens"),
+                                      selected = "clst",
+                                      inline = TRUE),
+                         conditionalPanel(condition = "input.class_tp == 'clst'",
+                                          # cluster
+                                          selectInput(inputId = "class_1",
+                                                      label = NULL,
+                                                      choices = 1:8,
+                                                      selected = 1)
+                         ),
+                         conditionalPanel(condition = "input.class_tp == 'sens'",
+                                          # trend
+                                          selectInput(inputId = "class_2",
+                                                      label = "Trend:",
+                                                      choices = c("Bell", "Up", "Down"),
+                                                      selected = "Bell"),
+                                          conditionalPanel(condition = "input.class_2 == 'Bell'",
+                                                           # sensitivity
+                                                           selectInput(inputId = "class_3_1",
+                                                                       label = "Sensitvity:",
+                                                                       choices = c("High"),
+                                                                       selected = "High")
+                                          ),
+                                          conditionalPanel(condition = "input.class_2 == 'Up'",
+                                                           # sensitivity
+                                                           selectInput(inputId = "class_3_2",
+                                                                       label = "Sensitvity:",
+                                                                       choices = c("Medium", "Low"),
+                                                                       selected = "Medium")
+                                          ),
+                                          conditionalPanel(condition = "input.class_2 == 'Down'",
+                                                           # sensitivity
+                                                           selectInput(inputId = "class_3_3",
+                                                                       label = "Sensitvity:",
+                                                                       choices = c("High", "Medium", "Low"),
+                                                                       selected = "High")
+                                          )
+                                          
+                         ),
+                         p(style = "text-align: left; margin-top: 10px;", 
+                           tags$b("Note: "), "Please refer to our publication for more details.")
                          
         ),
         
