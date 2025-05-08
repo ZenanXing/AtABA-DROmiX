@@ -297,7 +297,7 @@ function(input, output, session) {
       filter(!is.na(Low_ED50)|!is.na(BMD))
     colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Trend", "Sensitivity", 
                            "ED\u2085\u2080", "ED\u2085\u2080\nLowerBound", "ED\u2085\u2080\nUpperBound", 
-                           HTML("BMD<sub>1SD</sub>"), HTML("BMD<sub>1SD</sub>\nLowerBound"), HTML("BMD<sub>1SD</sub>\nUpperBound"))
+                           "BMD", "BMD\nLowerBound", "BMD\nUpperBound")
     df_temp <- df_temp %>% mutate(across(6:ncol(df_temp), ~ map_chr(.x, display_format)))
     return(df_temp)
     
@@ -319,12 +319,12 @@ function(input, output, session) {
     tagList(
       # Table
       div(style = "margin-top: 30px"),
-      h5(HTML(paste0("ED", tags$sub("50"), " & BMD", tags$sub("1SD"), " Estimation Table")), align = 'center'),
+      h5(HTML(paste0("ED", tags$sub("50"), " & BMD Estimation Table")), align = 'center'),
       div(style = "margin-top: -10px"),
       #hr(),
       #div(style = "margin-top: -10px"),
       DT::dataTableOutput("tb_ed") %>% shinycssloaders::withSpinner(),
-      p(tags$b("Note:"), HTML(paste0("Only genes with valid ED", tags$sub("50"), " or BMD", tags$sub("1SD"), " values are displayed."))),
+      p(tags$b("Note:"), HTML(paste0("Only genes with valid ED", tags$sub("50"), " or BMD values are displayed."))),
       # Download
       div(style = "margin-top: 20px"),
       h5("Download"),
