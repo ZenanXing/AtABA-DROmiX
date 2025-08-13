@@ -279,8 +279,8 @@ function(input, output, session) {
       arrange(factor(AGI, levels = data_values$agi_list))
     colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Trend", "Sensitivity", "Membership", "Maximum_Response", "Minimum_Response",
                            "Response_at_BMD", "BMD", "BMD_LowerBound", "BMD_UpperBound", 
-                           "Response_at_Low_ED50", "Low_ED50", "Low_ED50_LowerBound", "Low_ED50_UpperBound", 
-                           "Response_at_High_ED50", "High_ED50", "High_ED50_LowerBound", "High_ED50_UpperBound", 
+                           "Response_at_Low_EC50", "Low_EC50", "Low_EC50_LowerBound", "Low_EC50_UpperBound", 
+                           "Response_at_High_EC50", "High_EC50", "High_EC50_LowerBound", "High_EC50_UpperBound", 
                            "Response_at_LDS", "LDS", "LDS_LowerBound", "LDS_UpperBound", 
                            "Response_at_M", "M", 
                            "Model", "Neill's test", "No effet test")
@@ -288,15 +288,15 @@ function(input, output, session) {
   })
   
   ## tables for display
-  # low ED50s
+  # low EC50s
   ED50_table <- reactive({
     
     req(df_ed_exp())
     df_temp <- df_ed_exp() %>% 
       dplyr::select(1:5, 14:16, 10:12) %>% 
-      filter(!is.na(Low_ED50)|!is.na(BMD))
+      filter(!is.na(Low_EC50)|!is.na(BMD))
     colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Trend", "Sensitivity", 
-                           "ED\u2085\u2080", "ED\u2085\u2080\nLowerBound", "ED\u2085\u2080\nUpperBound", 
+                           "EC\u2085\u2080", "EC\u2085\u2080\nLowerBound", "EC\u2085\u2080\nUpperBound", 
                            "BMD", "BMD\nLowerBound", "BMD\nUpperBound")
     df_temp <- df_temp %>% mutate(across(6:ncol(df_temp), ~ map_chr(.x, display_format)))
     return(df_temp)
@@ -319,12 +319,12 @@ function(input, output, session) {
     tagList(
       # Table
       div(style = "margin-top: 30px"),
-      h5(HTML(paste0("ED", tags$sub("50"), " & BMD Estimation Table")), align = 'center'),
+      h5(HTML(paste0("EC", tags$sub("50"), " & BMD Estimation Table")), align = 'center'),
       div(style = "margin-top: -10px"),
       #hr(),
       #div(style = "margin-top: -10px"),
       DT::dataTableOutput("tb_ed") %>% shinycssloaders::withSpinner(),
-      p(tags$b("Note:"), HTML(paste0("Only genes with valid ED", tags$sub("50"), " or BMD values are displayed."))),
+      p(tags$b("Note:"), HTML(paste0("Only genes with valid EC", tags$sub("50"), " or BMD values are displayed."))),
       # Download
       div(style = "margin-top: 20px"),
       h5("Download"),
@@ -429,14 +429,14 @@ function(input, output, session) {
     # ed50 lines
     if (input$plot_ed50_ck == TRUE) {
       p_slt <- p_slt +
-        geom_hline(data = df_ed_slt, aes(yintercept = Response_at_Low_ED50), linetype = "longdash", color = "#0072B2", alpha = 0.5) + 
-        geom_vline(data = df_ed_slt, aes(xintercept = Low_ED50, 
-                                         text = paste("ED50:", round(Low_ED50, 2),"<br>Response_at_ED50:", round(Response_at_Low_ED50, 2))),
+        geom_hline(data = df_ed_slt, aes(yintercept = Response_at_Low_EC50), linetype = "longdash", color = "#0072B2", alpha = 0.5) + 
+        geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50, 
+                                         text = paste("EC50:", round(Low_EC50, 2),"<br>Response_at_EC50:", round(Response_at_Low_EC50, 2))),
                    linetype = "longdash", color = "#0072B2", alpha = 0.5)
       if (input$plot_ci_ck == TRUE) {
         p_slt <- p_slt + 
-          geom_vline(data = df_ed_slt, aes(xintercept = Low_ED50_LowerBound), linetype = "dotted", color = "#0072B2", alpha = 0.5) + 
-          geom_vline(data = df_ed_slt, aes(xintercept = Low_ED50_UpperBound), linetype = "dotted", color = "#0072B2", alpha = 0.5)
+          geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_LowerBound), linetype = "dotted", color = "#0072B2", alpha = 0.5) + 
+          geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_UpperBound), linetype = "dotted", color = "#0072B2", alpha = 0.5)
       }
     }
     
@@ -558,14 +558,14 @@ function(input, output, session) {
         # ed50 lines
         if (input$plot_ed50_ck == TRUE) {
           p_slt <- p_slt +
-            geom_hline(data = df_ed_slt, aes(yintercept = Response_at_Low_ED50), linetype = "longdash", color = "#0072B2", alpha = 0.5) + 
-            geom_vline(data = df_ed_slt, aes(xintercept = Low_ED50, 
-                                             text = paste("ED50:", round(Low_ED50, 2),"<br>Response_at_ED50:", round(Response_at_Low_ED50, 2))),
+            geom_hline(data = df_ed_slt, aes(yintercept = Response_at_Low_EC50), linetype = "longdash", color = "#0072B2", alpha = 0.5) + 
+            geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50, 
+                                             text = paste("EC50:", round(Low_EC50, 2),"<br>Response_at_EC50:", round(Response_at_Low_EC50, 2))),
                        linetype = "longdash", color = "#0072B2", alpha = 0.5)
           if (input$plot_ci_ck == TRUE) {
             p_slt <- p_slt + 
-              geom_vline(data = df_ed_slt, aes(xintercept = Low_ED50_LowerBound), linetype = "dotted", color = "#0072B2", alpha = 0.5) + 
-              geom_vline(data = df_ed_slt, aes(xintercept = Low_ED50_UpperBound), linetype = "dotted", color = "#0072B2", alpha = 0.5)
+              geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_LowerBound), linetype = "dotted", color = "#0072B2", alpha = 0.5) + 
+              geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_UpperBound), linetype = "dotted", color = "#0072B2", alpha = 0.5)
           }
         }
         

@@ -155,7 +155,7 @@ navbarPage(
                    "Show the ED-related values and the corresponding responses：", 
                    div(),
                    div(style = "vertical-align: top;", 
-                       checkboxInput(inputId = "plot_ed50_ck", label = HTML(paste0("ED", tags$sub("50"))), value = FALSE)), 
+                       checkboxInput(inputId = "plot_ed50_ck", label = HTML(paste0("EC", tags$sub("50"))), value = FALSE)), 
                    div(style = "vertical-align: top; margin-top: -15px;", 
                        checkboxInput(inputId = "plot_bmd_ck", label = HTML("BMD"), value = FALSE)),
                    uiOutput(outputId = "lds_m"), 
