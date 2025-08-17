@@ -21,6 +21,8 @@ navbarPage(
   
   title = HTML("<b>AtABA-DROmiX</b> <small>- <b>A</b>rabidopsis <b>t</b>haliana <b>ABA</b> <b>D</b>ose-<b>R</b>esponse Transcript<b>omi</b>cs E<b>x</b>plorer</small>"),
   
+  windowTitle  = "AtABA-DROmiX", 
+  
   # Theme from bslib
   theme = bs_theme(bootswatch = "cerulean"), 
   useShinyjs(),
