@@ -15,7 +15,7 @@ Happy exploring :)
 
 ## Getting Started
 
-AtABA-DROmiX can be used both locally and online. The app can be installed following the instructions below and it is also hosted on Shinyapps.io: .  
+AtABA-DROmiX can be used both locally and online. The app can be installed following the instructions below and it is also hosted on Shinyapps.io: https://zenanx.shinyapps.io/ataba-dromix/.  
 
 ### Installation
 
@@ -53,9 +53,7 @@ This project is licensed under the GNU General Public License, version 3 (GPLv3)
 
 ## Citations
 
-If you use the AtABA-DROmiX, please cite our paper and the related papers listed below.
-
-*Xing Z, Park SY, Eckhardt J, Cutler SR. ABA signaling secrets: Decoding gene sensitivity and exploring receptor subfamily function in gene regulation. (manuscript in preparation)*  
+The data used in this app are included in a manuscript currently in preparation. If you use the AtABA-DROmiX, please contact us at zxing001@ucr.edu and cutler@ucr.edu.
   
 [(Back to top)](#ataba-dromix)
 
