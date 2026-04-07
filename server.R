@@ -48,6 +48,16 @@ function(input, output, session) {
   observe({
     data_values$n <- nrow(data())
     data_values$agi_list <- data()[, 1]
+    # genotype
+    df_geno <- data.frame(
+      ckgrp = c("col", "i", "ii", "iii"),
+      Genotype = c("Col-0", "sfkoI", "sfkoII", "sfkoIII")
+    )
+    df_geno_slt <- data.frame(
+      ckgrp = input$genotype
+    ) %>% left_join(df_geno, by = "ckgrp")
+    data_values$genotype_list <- df_geno_slt$Genotype
+    
   })
 
 # Gene_Description --------------------------------------------------------
@@ -57,11 +67,17 @@ function(input, output, session) {
   })
 
 # Pairwise Comparison -----------------------------------------------------
-  df_pc <- eventReactive(input$upldData_Butn, {
-    pc <- readRDS("data/PC_ABAvsMock_Col.rds") %>% filter(AGI %in% data_values$agi_list)
+  
+  # PC - ABA vs Mock
+  df_pc_aba <- eventReactive(input$upldData_Butn, {
+    pc <- readRDS("data/PC_ABAvsMock.rds") %>% filter(AGI %in% data_values$agi_list)
     return(pc)
   })
-  
+  # PC - Mutant vs Col-0
+  df_pc_mut <- eventReactive(input$upldData_Butn, {
+    pc <- readRDS("data/PC_MutantvsWildtype.rds") %>% filter(AGI %in% data_values$agi_list)
+    return(pc)
+  })
 
 # ED-related Table --------------------------------------------------------
   
@@ -121,11 +137,11 @@ function(input, output, session) {
     updateTextAreaInput(session, inputId = "text1", label = "", value = "")
   })
   
-# Heatmap -----------------------------------------------------------------
+# Heatmap - ABA vs Mock -----------------------------------------------------------------
   
   # Dataframe_all
-  df_hm_all <- reactive({
-    req(nrow(df_pc()) != 0)
+  df_hm_aba_all <- reactive({
+    req(nrow(df_pc_aba()) != 0)
     ## Change the label
     lab <- c("0.003", "0.01", "0.03",  "0.09", "0.27", "0.8", 
              "2", "7", "22", "102", "160", "200")
@@ -134,63 +150,88 @@ function(input, output, session) {
                    2427.26, 7281.78, 21845.33, 102400.00, 160000.00, 200000.00),
       ABA = factor(lab, levels = lab)
     )
-    df_hm_all <- df_pc() %>% 
+    df_hm_aba_all <- df_pc_aba() %>% 
+      filter(Genotype %in% data_values$genotype_list) %>% 
       mutate(ABA_Conc = round(ABA_nM, 2)) %>% 
       left_join(df_lab, by = "ABA_Conc") %>% 
       dplyr::select(-ABA_Conc)
-    return(df_hm_all)
+    return(df_hm_aba_all)
   })
   
   # Exported dataframe
-  df_exp_hm <- reactive({
-    req(nrow(df_pc()) != 0)
-    df_exp_hm <- df_hm_all() %>% 
-      dplyr::select(1:4) %>% 
+  df_exp_aba_hm <- reactive({
+    req(nrow(df_pc_aba()) != 0)
+    
+    # exported data frame
+    df_exp_hm <- df_hm_aba_all() %>% 
+      dplyr::select(AGI, Genotype, ABA_nM, Variable, Value) %>% 
       arrange(factor(Variable, level = c("logFC", "FDR", "logCPM", "F", "PValue"))) %>% 
       pivot_wider(names_from = Variable, values_from = Value) %>% 
       left_join(df_desc(), by = "AGI") %>% 
-      dplyr::select(1, 8, 2:7, 9) %>% 
-      arrange(factor(AGI, levels = data_values$agi_list), ABA_nM)
+      mutate(Comparison = "ABA vs Mock") %>% 
+      dplyr::select(Comparison, AGI, tair_symbol, Genotype, ABA_nM, logFC, FDR, logCPM, F, PValue, entrezgene_description) %>% 
+      arrange(factor(AGI, levels = data_values$agi_list), factor(Genotype, levels = data_values$genotype_list), ABA_nM)
+    
     return(df_exp_hm)
   })
   
   # Heatmap
-  Hmap <- reactive({
-    req(nrow(df_pc()) != 0)
+  Hmap_aba <- reactive({
+    req(nrow(df_pc_aba()) != 0)
     ## FC dataframe
-    df_hm_temp <- df_hm_all() %>% 
+    df_hm_temp <- df_hm_aba_all() %>% 
       filter(Variable == "logFC") %>% 
-      dplyr::select("AGI", "ABA", "Value") %>% 
-      spread(ABA, Value) %>% 
-      arrange(factor(AGI, levels = data_values$agi_list))
-    df_hm_fc <- df_hm_temp[2:13]
+      unite(Genotype, ABA, col = "comb", sep = ", ABA(μM): ", remove = FALSE) %>% 
+      arrange(factor(AGI, levels = data_values$agi_list), factor(Genotype, levels = data_values$genotype_list), ABA) %>% 
+      dplyr::select(AGI, comb, Value) %>% 
+      pivot_wider(names_from = comb, values_from = Value)
+    df_hm_fc <- df_hm_temp[2:ncol(df_hm_temp)]
     rownames(df_hm_fc) <- df_hm_temp$AGI
     
     ## FDR annotation
-    df_hm_temp <- df_hm_all() %>% 
+    df_hm_temp <- df_hm_aba_all() %>% 
       filter(Variable == "FDR") %>% 
       left_join(df_desc(), by = "AGI") %>% 
       mutate(Lab = paste0("FDR: ", formatC(as.numeric(Value), format = "E", digit = 2), "\n",
                           "Gene: ", tair_symbol)) %>% 
-      dplyr::select("AGI", "ABA", "Lab") %>% 
-      spread(ABA, Lab) %>% 
-      arrange(factor(AGI, levels = data_values$agi_list))
-    df_hm_fdr <- df_hm_temp[2:13]
+      unite(Genotype, ABA, col = "comb", sep = ", ABA(μM): ", remove = FALSE) %>% 
+      arrange(factor(AGI, levels = data_values$agi_list), factor(Genotype, levels = data_values$genotype_list), ABA) %>% 
+      dplyr::select(AGI, comb, Lab) %>% 
+      pivot_wider(names_from = comb, values_from = Lab)
+    df_hm_fdr <- df_hm_temp[2:ncol(df_hm_temp)]
     rownames(df_hm_fdr) <- df_hm_temp$AGI
+    
+    # Genotype annotation
+    df_hm_temp <- df_hm_aba_all() %>% 
+      filter(Variable == "FDR") %>% 
+      unite(Genotype, ABA, col = "comb", sep = ", ABA(μM): ", remove = FALSE) %>% 
+      dplyr::select(comb, Genotype, ABA) %>% unique() %>% 
+      arrange(factor(Genotype, levels = data_values$genotype_list), ABA)
+    gntp <- factor(df_hm_temp$Genotype, levels = data_values$genotype_list)
+    color_map <- c(
+      "Col-0" = "#ffac6a", "sfkoI" = "#f2cf80",
+      "sfkoII" = "#abd9f4", "sfkoIII" = "#80ceb9"
+    )
+    color_map_slt <- color_map[data_values$genotype_list]
+    gntp_char <- as.character(df_hm_temp$Genotype)
+    names(gntp_char) <- "Genotype"
+    col_side_palette <- color_map_slt[levels(gntp)]
+    col_side_colors_df <- data.frame(Genotype = gntp)
     
     ## Heatmap
     p <- heatmaply(
       df_hm_fc,
       cluster_rows = FALSE,
       cluster_cols = FALSE,
-      column_text_angle = 0,
-      #grid_color = "white", grid_size = 0.1*5/data_values$n,
+      col_side_colors = col_side_colors_df,
+      col_side_palette = col_side_palette,
+      grid_color = "white", grid_size = 0.1,
       dendrogram = "none",
       seriate = "none",
+      key.title = "log2FC",
+      xlab = "ABA (Low ⇢ High)",
       main = "ABA vs Mock",
-      key.title = "logFC",
-      xlab = "ABA (μM)",
-      label_names = c("AGI", "ABA (μM)", "logFC (ABAvsMock)"),
+      label_names = c("AGI", "Genotype", "log2FC (ABA vs Mock)"),
       custom_hovertext = df_hm_fdr,
       scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(
         low = "#2171B5", 
@@ -199,23 +240,24 @@ function(input, output, session) {
       )
     ) %>%
       plotly::layout(
-        margin = list(l = 50, r = 50, t = 50, b = 100)
+        xaxis = list(showticklabels = FALSE, ticks = ""), 
+        margin = list(l = 50, r = 50, t = 100, b = 100)
       )
     
     return(p)
     
   })
   
-  output$heatmap <- renderPlotly({
-    return(Hmap())
+  output$heatmap_aba <- renderPlotly({
+    return(Hmap_aba())
   })
   
-  output$hm <- renderUI({
-    req(nrow(df_pc()) != 0)
+  output$hm_aba <- renderUI({
+    req(nrow(df_pc_aba()) != 0)
     tagList(
-      # Table
-      div(style = "margin-top: 30px"),
-      plotlyOutput("heatmap", width = "100%", height = "600px") %>% shinycssloaders::withSpinner(), 
+      # Heatmap
+      div(style = "margin-top: 10px"),
+      plotlyOutput("heatmap_aba", width = "100%", height = "600px") %>% shinycssloaders::withSpinner(), 
       p(tags$b("Note:"), "Only genes considered as expressed in our experiment are displayed."),
       # Download
       div(style = "margin-top: 20px"),
@@ -224,47 +266,234 @@ function(input, output, session) {
       hr(),
       div(style = "margin-top: -10px"),
       div(style = "vertical-align: top;", 
-          textInput(inputId = "file_name_hm", label = "Enter a file name: ", value = Sys.time())
+          textInput(inputId = "file_name_hm_aba", label = "Enter a file name: ", value = paste0("ABA_vs_Mock_", Sys.Date()))
       ),
       div(style = "vertical-align: top;", 
-          selectInput(inputId = "file_type_hm", label = "Select file type for the dataframe:", 
+          selectInput(inputId = "file_type_hm_aba", label = "Select file type for the dataframe:", 
                       choices = list("EXCEL", "CSV", "TSV", "TXT"), selected = "EXCEL")
       ),
       div(),
       div(style = "display: inline-block; vertical-align: top; width: 200px;",
-          downloadButton(outputId = "dl_df_hm", label = "Download Dataframe")),
+          downloadButton(outputId = "dl_df_hm_aba", label = "Download Dataframe")),
       div(style = "display: inline-block; vertical-align: top; width: 200px;",
-          downloadButton(outputId = "dl_hm", label = "Download Heatmap")),
+          downloadButton(outputId = "dl_hm_aba", label = "Download Heatmap")),
       div(style = "margin-top: 20px")
     )
   })
   
   # Download the dataframe
-  output$dl_df_hm <- downloadHandler(
+  output$dl_df_hm_aba <- downloadHandler(
     filename = function() {
-      if (input$file_type_hm == "EXCEL") { ext <- ".xlsx" } else { ext <- paste0(".", tolower(input$file_type_hm))}
-      paste0(input$file_name_hm, ext)
+      if (input$file_type_hm_aba == "EXCEL") { ext <- ".xlsx" } else { ext <- paste0(".", tolower(input$file_type_hm_aba))}
+      paste0(input$file_name_hm_aba, ext)
     },
     
     content = function(file) {
-      if (input$file_type_hm == "EXCEL") {
-        openxlsx::write.xlsx(df_exp_hm(), file)
+      if (input$file_type_hm_aba == "EXCEL") {
+        openxlsx::write.xlsx(df_exp_aba_hm(), file)
       } else {
-        sep <- switch(input$file_type_hm, "TXT" = " ", "CSV" = ",", "TSV" = "\t" )
-        write.table(x = df_exp_hm(), file = file, sep = sep, quote = FALSE, row.names = FALSE)
+        sep <- switch(input$file_type_hm_aba, "TXT" = " ", "CSV" = ",", "TSV" = "\t" )
+        write.table(x = df_exp_aba_hm(), file = file, sep = sep, quote = FALSE, row.names = FALSE)
       }
     }
   )
   
   # Download the heatmap
-  output$dl_hm <- downloadHandler(
+  output$dl_hm_aba <- downloadHandler(
     filename = function() {
-      paste0(input$file_name_hm, ".html")
+      paste0(input$file_name_hm_aba, ".html")
     },
     content = function(file) {
-      htmlwidgets::saveWidget(Hmap(), file, selfcontained = TRUE)
+      htmlwidgets::saveWidget(Hmap_aba(), file, selfcontained = TRUE)
     }
   )
+
+# Heatmap - Mutant vs Col-0 -----------------------------------------------
+
+  # Show/Hide this tab
+  observe({
+    if (length(input$genotype) == 1 && input$genotype == "col") {
+      hideTab(inputId = "tabs1", target = "Heatmap - Mutant vs Col-0")
+    } else {
+      showTab(inputId = "tabs1", target = "Heatmap - Mutant vs Col-0")
+    }
+  })
+
+  # Dataframe_all
+  df_hm_mut_all <- reactive({
+    req(nrow(df_pc_mut()) != 0)
+    ## Change the label
+    lab <- c("0", "0.003", "0.01", "0.03",  "0.09", "0.27", "0.8", 
+             "2", "7", "22", "102", "160", "200")
+    df_lab <- data.frame(
+      ABA_Conc = c(0, 3.33, 9.99, 29.97, 89.90, 269.70, 809.09, 
+                   2427.26, 7281.78, 21845.33, 102400.00, 160000.00, 200000.00),
+      ABA = factor(lab, levels = lab)
+    )
+    mutant_list <- data_values$genotype_list[!data_values$genotype_list %in% "Col-0"]
+    df_hm_mut_all <- df_pc_mut() %>% 
+      filter(Genotype %in% mutant_list) %>% 
+      mutate(ABA_Conc = round(ABA_nM, 2)) %>% 
+      left_join(df_lab, by = "ABA_Conc") %>% 
+      dplyr::select(-ABA_Conc)
+    return(df_hm_mut_all)
+  })
+  
+  # Exported dataframe
+  df_exp_mut_hm <- reactive({
+    req(nrow(df_pc_mut()) != 0)
+    
+    # exported data frame
+    mutant_list <- data_values$genotype_list[!data_values$genotype_list %in% "Col-0"]
+    df_exp_mut_hm <- df_hm_mut_all() %>% 
+      dplyr::select(AGI, Genotype, ABA_nM, Variable, Value) %>% 
+      arrange(factor(Variable, level = c("logFC", "FDR", "logCPM", "F", "PValue"))) %>% 
+      pivot_wider(names_from = Variable, values_from = Value) %>% 
+      left_join(df_desc(), by = "AGI") %>% 
+      mutate(Comparison = "Mutant vs Col-0") %>% 
+      dplyr::select(Comparison, AGI, tair_symbol, Genotype, ABA_nM, logFC, FDR, logCPM, F, PValue, entrezgene_description) %>% 
+      arrange(factor(AGI, levels = data_values$agi_list), factor(Genotype, levels = mutant_list), ABA_nM)
+    
+    return(df_exp_mut_hm)
+  })
+  
+  # Heatmap
+  Hmap_mut <- reactive({
+    req(nrow(df_pc_mut()) != 0)
+    ## Mutant list
+    mutant_list <- data_values$genotype_list[!data_values$genotype_list %in% "Col-0"]
+    
+    ## FC dataframe
+    df_hm_temp <- df_hm_mut_all() %>% 
+      filter(Variable == "logFC") %>% 
+      unite(Genotype, ABA, col = "comb", sep = ", ABA(μM): ", remove = FALSE) %>% 
+      arrange(factor(AGI, levels = data_values$agi_list), factor(Genotype, levels = mutant_list), ABA) %>% 
+      dplyr::select(AGI, comb, Value) %>% 
+      pivot_wider(names_from = comb, values_from = Value)
+    df_hm_fc <- df_hm_temp[2:ncol(df_hm_temp)]
+    rownames(df_hm_fc) <- df_hm_temp$AGI
+    
+    ## FDR annotation
+    df_hm_temp <- df_hm_mut_all() %>% 
+      filter(Variable == "FDR") %>% 
+      left_join(df_desc(), by = "AGI") %>% 
+      mutate(Lab = paste0("FDR: ", formatC(as.numeric(Value), format = "E", digit = 2), "\n",
+                          "Gene: ", tair_symbol)) %>% 
+      unite(Genotype, ABA, col = "comb", sep = ", ABA(μM): ", remove = FALSE) %>% 
+      arrange(factor(AGI, levels = data_values$agi_list), factor(Genotype, levels = mutant_list), ABA) %>% 
+      dplyr::select(AGI, comb, Lab) %>% 
+      pivot_wider(names_from = comb, values_from = Lab)
+    df_hm_fdr <- df_hm_temp[2:ncol(df_hm_temp)]
+    rownames(df_hm_fdr) <- df_hm_temp$AGI
+    
+    # Genotype annotation
+    df_hm_temp <- df_hm_mut_all() %>% 
+      filter(Variable == "FDR") %>% 
+      unite(Genotype, ABA, col = "comb", sep = ", ABA(μM): ", remove = FALSE) %>% 
+      dplyr::select(comb, Genotype, ABA) %>% unique() %>% 
+      arrange(factor(Genotype, levels = mutant_list), ABA)
+    gntp <- factor(df_hm_temp$Genotype, levels = mutant_list)
+    color_map <- c(
+      "sfkoI" = "#f2cf80",
+      "sfkoII" = "#abd9f4",
+      "sfkoIII" = "#80ceb9"
+    )
+    color_map_slt <- color_map[mutant_list]
+    gntp_char <- as.character(df_hm_temp$Genotype)
+    names(gntp_char) <- "Genotype"
+    col_side_palette <- color_map_slt[levels(gntp)]
+    col_side_colors_df <- data.frame(Genotype = gntp)
+    
+    ## Heatmap
+    p <- heatmaply(
+      df_hm_fc,
+      cluster_rows = FALSE,
+      cluster_cols = FALSE,
+      col_side_colors = col_side_colors_df,
+      col_side_palette = col_side_palette,
+      grid_color = "white", grid_size = 0.1,
+      dendrogram = "none",
+      seriate = "none",
+      key.title = "log2FC",
+      xlab = "ABA (Low ⇢ High)",
+      main = "Mutant vs Col-0",
+      label_names = c("AGI", "Genotype", "log2FC (Mutant vs Col-0)"),
+      custom_hovertext = df_hm_fdr,
+      scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(
+        low = "#2171B5", 
+        high = "#CB181D", 
+        midpoint = 0
+      )
+    ) %>%
+      plotly::layout(
+        xaxis = list(showticklabels = FALSE, ticks = ""), 
+        margin = list(l = 50, r = 50, t = 100, b = 100)
+      )
+    
+    return(p)
+    
+  })
+  
+  output$heatmap_mut <- renderPlotly({
+    return(Hmap_mut())
+  })
+  
+  output$hm_mut <- renderUI({
+    req(nrow(df_pc_mut()) != 0)
+    tagList(
+      # Heatmap
+      div(style = "margin-top: 10px"),
+      plotlyOutput("heatmap_mut", width = "100%", height = "600px") %>% shinycssloaders::withSpinner(), 
+      p(tags$b("Note:"), "Only genes considered as expressed in our experiment are displayed."),
+      # Download
+      div(style = "margin-top: 20px"),
+      h5("Download"),
+      div(style = "margin-top: -10px"),
+      hr(),
+      div(style = "margin-top: -10px"),
+      div(style = "vertical-align: top;", 
+          textInput(inputId = "file_name_hm_mut", label = "Enter a file name: ", value = paste0("Mutant_vs_Wildtype_", Sys.Date()))
+      ),
+      div(style = "vertical-align: top;", 
+          selectInput(inputId = "file_type_hm_mut", label = "Select file type for the dataframe:", 
+                      choices = list("EXCEL", "CSV", "TSV", "TXT"), selected = "EXCEL")
+      ),
+      div(),
+      div(style = "display: inline-block; vertical-align: top; width: 200px;",
+          downloadButton(outputId = "dl_df_hm_mut", label = "Download Dataframe")),
+      div(style = "display: inline-block; vertical-align: top; width: 200px;",
+          downloadButton(outputId = "dl_hm_mut", label = "Download Heatmap")),
+      div(style = "margin-top: 20px")
+    )
+  })
+  
+  # Download the dataframe
+  output$dl_df_hm_mut <- downloadHandler(
+    filename = function() {
+      if (input$file_type_hm_mut == "EXCEL") { ext <- ".xlsx" } else { ext <- paste0(".", tolower(input$file_type_hm_mut))}
+      paste0(input$file_name_hm_mut, ext)
+    },
+    
+    content = function(file) {
+      if (input$file_type_hm_mut == "EXCEL") {
+        openxlsx::write.xlsx(df_exp_mut_hm(), file)
+      } else {
+        sep <- switch(input$file_type_hm_mut, "TXT" = " ", "CSV" = ",", "TSV" = "\t" )
+        write.table(x = df_exp_mut_hm(), file = file, sep = sep, quote = FALSE, row.names = FALSE)
+      }
+    }
+  )
+  
+  # Download the heatmap
+  output$dl_hm_mut <- downloadHandler(
+    filename = function() {
+      paste0(input$file_name_hm_mut, ".html")
+    },
+    content = function(file) {
+      htmlwidgets::saveWidget(Hmap_mut(), file, selfcontained = TRUE)
+    }
+  )
+  
   
 # Sensitivity -------------------------------------------------------------
 
@@ -332,7 +561,7 @@ function(input, output, session) {
       hr(),
       div(style = "margin-top: -10px"),
       div(style = "display: inline-block; vertical-align: top;", 
-          textInput(inputId = "file_name", label = "Enter a file name: ", value = Sys.time())
+          textInput(inputId = "file_name", label = "Enter a file name: ", value = paste0("Sensitivity_Table_", Sys.Date()))
       ),
       div(style = "display: inline-block; vertical-align: top; width: 150px;", 
           selectInput(inputId = "file_type", label = "Select file type:", 
