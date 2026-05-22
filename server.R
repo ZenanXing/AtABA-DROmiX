@@ -695,7 +695,7 @@ function(input, output, session) {
     if (!(length(input$genotype) == 1 && input$genotype == "col")) {
       checkboxInput(inputId = "mut_drc",
                     label = "Include the Mutants",
-                    value = FALSE)
+                    value = TRUE)
     }
   })
   
