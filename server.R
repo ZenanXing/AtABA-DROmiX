@@ -90,34 +90,93 @@ function(input, output, session) {
   df_point <- eventReactive(input$upldData_Butn, {
     df_point <- readRDS("data/DF_Point.rds") %>% filter(AGI %in% data_values$agi_list)
     df_point$ABA_nM[df_point$ABA_nM == 0] <- 0.03
-    df_point <- df_point %>% group_by(AGI) %>% nest()
+    df_point <- df_point %>% group_by(Genotype, AGI) %>% nest()
     return(df_point)
   })
   df_point_mean <- eventReactive(input$upldData_Butn, {
     df_point_mean <- df_point() %>% 
       unnest() %>% 
-      group_by(AGI, ABA_nM) %>% 
+      group_by(Genotype, AGI, ABA_nM) %>% 
       dplyr::summarise(TPM_Mean = mean(TPM), 
                        TPM_SD = sd(TPM))
     return(df_point_mean)
   })
   
 # Curve_Data --------------------------------------------------------------
-  df_curve <- eventReactive(input$upldData_Butn, {
-    df_curve_4_8 <- readRDS("data/DF_Curve_2.rds")
-    df_curve_all <- readRDS("data/DF_Curve_1.rds") %>% rbind(df_curve_4_8)
+  
+  # wildtype - col-0
+  df_curve_wt <- eventReactive(input$upldData_Butn, {
+    df_curve_4_8 <- readRDS("data/DF_Curve_wt_2.rds")
+    df_curve_all <- readRDS("data/DF_Curve_wt_1.rds") %>% rbind(df_curve_4_8)
     df_curve_1 <- df_curve_all %>% filter(AGI %in% data_values$agi_list) %>% unnest()
     df_curve_2 <- df_point_mean() %>% filter(AGI %in% setdiff(data_values$agi_list, df_curve_1$AGI)) %>% 
       mutate(Lower = NA, 
              Upper = NA,
              Prediction = TPM_Mean) %>% 
-      dplyr::select(AGI, Prediction, Lower, Upper, ABA_nM)
+      dplyr::select(AGI, Genotype, Prediction, Lower, Upper, ABA_nM)
     if (!is.null(df_curve_1)) {
       df_curve <- rbind(df_curve_1, df_curve_2)
     } else {
       df_curve <- df_curve_2
     }
-    df_curve <- df_curve %>% group_by(AGI) %>% nest()
+    df_curve <- df_curve %>% group_by(Genotype, AGI) %>% nest()
+    return(df_curve)
+  })
+  
+  # sfkoI
+  df_curve_sfko1 <- eventReactive(input$upldData_Butn, {
+    df_curve_4_8 <- readRDS("data/DF_Curve_sfkoI_2.rds")
+    df_curve_all <- readRDS("data/DF_Curve_sfkoI_1.rds") %>% rbind(df_curve_4_8)
+    df_curve_1 <- df_curve_all %>% filter(AGI %in% data_values$agi_list) %>% unnest()
+    df_curve_2 <- df_point_mean() %>% filter(AGI %in% setdiff(data_values$agi_list, df_curve_1$AGI)) %>% 
+      mutate(Lower = NA, 
+             Upper = NA,
+             Prediction = TPM_Mean) %>% 
+      dplyr::select(AGI, Genotype, Prediction, Lower, Upper, ABA_nM)
+    if (!is.null(df_curve_1)) {
+      df_curve <- rbind(df_curve_1, df_curve_2)
+    } else {
+      df_curve <- df_curve_2
+    }
+    df_curve <- df_curve %>% group_by(Genotype, AGI) %>% nest()
+    return(df_curve)
+  })
+  
+  # sfkoII
+  df_curve_sfko2 <- eventReactive(input$upldData_Butn, {
+    df_curve_4_8 <- readRDS("data/DF_Curve_sfkoII_2.rds")
+    df_curve_all <- readRDS("data/DF_Curve_sfkoII_1.rds") %>% rbind(df_curve_4_8)
+    df_curve_1 <- df_curve_all %>% filter(AGI %in% data_values$agi_list) %>% unnest()
+    df_curve_2 <- df_point_mean() %>% filter(AGI %in% setdiff(data_values$agi_list, df_curve_1$AGI)) %>% 
+      mutate(Lower = NA, 
+             Upper = NA,
+             Prediction = TPM_Mean) %>% 
+      dplyr::select(AGI, Genotype, Prediction, Lower, Upper, ABA_nM)
+    if (!is.null(df_curve_1)) {
+      df_curve <- rbind(df_curve_1, df_curve_2)
+    } else {
+      df_curve <- df_curve_2
+    }
+    df_curve <- df_curve %>% group_by(Genotype, AGI) %>% nest()
+    return(df_curve)
+  })
+  
+  # sfkoIII
+  df_curve_sfko3 <- eventReactive(input$upldData_Butn, {
+    df_curve_4_8 <- readRDS("data/DF_Curve_sfkoIII_2.rds")
+    df_curve_all <- readRDS("data/DF_Curve_sfkoIII_1.rds") %>% rbind(df_curve_4_8)
+    df_curve_1 <- df_curve_all %>% filter(AGI %in% data_values$agi_list) %>% unnest()
+    df_curve_2 <- df_point_mean() %>% filter(AGI %in% setdiff(data_values$agi_list, df_curve_1$AGI)) %>% 
+      mutate(Lower = NA, 
+             Upper = NA,
+             Prediction = TPM_Mean) %>% 
+      dplyr::select(AGI, Genotype, Prediction, Lower, Upper, ABA_nM)
+    if (!is.null(df_curve_1)) {
+      df_curve <- rbind(df_curve_1, df_curve_2)
+    } else {
+      df_curve <- df_curve_2
+    }
+    df_curve <- df_curve %>% group_by(Genotype, AGI) %>% nest()
     return(df_curve)
   })
   
@@ -506,7 +565,7 @@ function(input, output, session) {
       dplyr::select(AGI, tair_symbol) %>% 
       left_join(df_ed(), by = "AGI") %>% 
       arrange(factor(AGI, levels = data_values$agi_list))
-    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Trend", "Sensitivity", "Membership", "Maximum_Response", "Minimum_Response",
+    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Genotype", "Cluster", "Trend", "Sensitivity", "Membership", "Maximum_Response", "Minimum_Response",
                            "Response_at_BMD", "BMD", "BMD_LowerBound", "BMD_UpperBound", 
                            "Response_at_Low_EC50", "Low_EC50", "Low_EC50_LowerBound", "Low_EC50_UpperBound", 
                            "Response_at_High_EC50", "High_EC50", "High_EC50_LowerBound", "High_EC50_UpperBound", 
@@ -522,12 +581,12 @@ function(input, output, session) {
     
     req(df_ed_exp())
     df_temp <- df_ed_exp() %>% 
-      dplyr::select(1:5, 14:16, 10:12) %>% 
+      dplyr::select(1:6, 15:17, 11:13) %>% 
       filter(!is.na(Low_EC50)|!is.na(BMD))
-    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Cluster", "Trend", "Sensitivity", 
+    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Genotype", "Cluster", "Trend", "Sensitivity", 
                            "EC\u2085\u2080", "EC\u2085\u2080\nLowerBound", "EC\u2085\u2080\nUpperBound", 
                            "BMD", "BMD\nLowerBound", "BMD\nUpperBound")
-    df_temp <- df_temp %>% mutate(across(6:ncol(df_temp), ~ map_chr(.x, display_format)))
+    df_temp <- df_temp %>% mutate(across(7:ncol(df_temp), ~ map_chr(.x, display_format)))
     return(df_temp)
     
   })
@@ -595,10 +654,20 @@ function(input, output, session) {
   
 # Dose-Response Curves ----------------------------------------------------
   
-  # Update the selectize 
-  observeEvent(data_values$agi_list, {
-    updateSelectizeInput(session, "agi_slt", choices = data_values$agi_list, 
-                         selected = head(data_values$agi_list, 1), server = TRUE)
+  # UI for selecting rep genes
+  output$agi_slt_ui <- renderUI({
+    req(data_values$agi_list)
+    if (isTRUE(input$mut_drc)) {
+      max <- 1
+    } else {
+      max <- 2
+    }
+    selectizeInput(inputId = "agi_slt",
+                   label = "Select the genes:",
+                   choices = data_values$agi_list, 
+                   selected = head(data_values$agi_list, 1),
+                   multiple = TRUE,
+                   options = list(maxItems = max))
   })
   
   # Selected dataframe
@@ -621,13 +690,26 @@ function(input, output, session) {
     }
   })
   
-## Demo Plot ---------------------------------------------------------------
+  # Include the mutants
+  output$mut_drc_ck <- renderUI({
+    if (!(length(input$genotype) == 1 && input$genotype == "col")) {
+      checkboxInput(inputId = "mut_drc",
+                    label = "Include the Mutants",
+                    value = FALSE)
+    }
+  })
   
+## Demo Plot ---------------------------------------------------------------
+
+### wt DRC ------------------------------------------------------------------
+
   demo_p <- reactive({
     req(input$agi_slt, data())
     agi_slt <- unname(input$agi_slt)
-    df_curve_slt <- df_curve() %>% filter(AGI %in% agi_slt) %>% unnest()
-    df_point_slt <- df_point() %>% filter(AGI %in% agi_slt) %>% unnest()
+    
+    ## dataframe
+    df_curve_slt <- df_curve_wt() %>% filter(AGI %in% agi_slt) %>% unnest()
+    df_point_slt <- df_point() %>% filter(Genotype == "Col-0") %>% filter(AGI %in% agi_slt) %>% unnest()
     df_point_mean_slt <- df_point_mean() %>% filter(AGI %in% agi_slt)
     df_ed_slt <- df_ed_slt()
     
@@ -636,94 +718,139 @@ function(input, output, session) {
     df_point_mean_slt$AGI <- factor(df_point_mean_slt$AGI, levels = agi_slt)
     df_ed_slt$AGI <- factor(df_ed_slt$AGI, levels = agi_slt)
     
-    p_slt <- ggplot() + 
-      # the major plot
-      geom_point(data = df_point_slt, aes(x = ABA_nM, y = TPM, 
-                                          text = paste("ABA [nM]:", round(ABA_nM, 2), "<br>Expression (TPM):", round(TPM, 2))), 
-                 color = "#D55E00", alpha = 1/3) + 
-      geom_line(data = df_curve_slt, aes(x = ABA_nM, y = Prediction), color = "#D55E00") +
-      facet_wrap(. ~ ordered(AGI), ncol = 2, scales = "free_y") +
-      scale_x_log10() + 
-      labs(x = "ABA [nM]",  y = "Expression (TPM)") + 
-      theme_bw() +
-      theme(panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank()) + 
-      theme(axis.title = element_text(size = 14),
-            axis.text = element_text(size = 10),
-            strip.text.x = element_text(size = 12),
-            legend.title = element_text(size = 14), 
-            legend.text = element_text(size = 10)) +
-      theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "in"))
     
-    # ed50 lines
-    if (input$plot_ed50_ck == TRUE) {
-      p_slt <- p_slt +
-        geom_hline(data = df_ed_slt, aes(yintercept = Response_at_Low_EC50), linetype = "longdash", color = "#0072B2", alpha = 0.5) + 
-        geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50, 
-                                         text = paste("EC50:", round(Low_EC50, 2),"<br>Response_at_EC50:", round(Response_at_Low_EC50, 2))),
-                   linetype = "longdash", color = "#0072B2", alpha = 0.5)
-      if (input$plot_ci_ck == TRUE) {
-        p_slt <- p_slt + 
-          geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_LowerBound), linetype = "dotted", color = "#0072B2", alpha = 0.5) + 
-          geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_UpperBound), linetype = "dotted", color = "#0072B2", alpha = 0.5)
-      }
-    }
-    
-    # bmd lines
-    if (input$plot_bmd_ck == TRUE) {
-      p_slt <- p_slt +
-        geom_hline(data = df_ed_slt, aes(yintercept = Response_at_BMD), linetype = "dashed", color = "#56B4E9", alpha = 0.5) + 
-        geom_vline(data = df_ed_slt, aes(xintercept = BMD, 
-                                         text = paste("BMD:", round(BMD, 2),"<br>Response_at_BMD:", round(Response_at_BMD, 2))), 
-                   linetype = "dashed", color = "#56B4E9", alpha = 0.5)
-      if (input$plot_ci_ck == TRUE) {
-        p_slt <- p_slt +
-          geom_vline(data = df_ed_slt, aes(xintercept = BMD_LowerBound), linetype = "dotted", color = "#56B4E9", alpha = 0.5) + 
-          geom_vline(data = df_ed_slt, aes(xintercept = BMD_UpperBound), linetype = "dotted", color = "#56B4E9", alpha = 0.5)
-      }
-    }
-    
-    ## max & min response
-    if (input$plot_resline_ck == TRUE) {
-      p_slt <- p_slt +
-        geom_hline(data = df_ed_slt, aes(yintercept = Maximum_Response, 
-                                         text = paste("Max:", round(Maximum_Response, 2))), linetype = "dotted", color = "#009E73", alpha = 0.5) + 
-        geom_hline(data = df_ed_slt, aes(yintercept = Minimum_Response, 
-                                         text = paste("Min:", round(Minimum_Response, 2))), linetype = "dotted", color = "#009E73", alpha = 0.5)
-    }
-    
-    # lds & m
-    if (any(df_ed_slt$Cluster == 1) && all(!is.na(df_ed_slt$Cluster))) {
-      if (input$plot_lds_m_ck == TRUE) {
-        p_slt <- p_slt +
-          # lds lines
-          geom_hline(data = df_ed_slt, aes(yintercept = Response_at_LDS), linetype = "dashed", color = "#009E73", alpha = 0.5) + 
-          geom_vline(data = df_ed_slt, aes(xintercept = LDS, 
-                                           text = paste("LDS:", round(LDS, 2),"<br>Response_at_LDS:", round(Response_at_LDS, 2))),
-                     linetype = "dashed", color = "#009E73", alpha = 0.5) + 
-          # m lines
-          geom_hline(data = df_ed_slt, aes(yintercept = Response_at_M), linetype = "dashed", color = "gold2", alpha = 0.5) + 
-          geom_vline(data = df_ed_slt, aes(xintercept = M, 
-                                           text = paste("M:", round(M, 2),"<br>Response_at_M:", round(Response_at_M, 2))), 
-                     linetype = "dashed", color = "gold2", alpha = 0.5)
-        
-        if (input$plot_ci_ck == TRUE) {
-          p_slt <- p_slt +
-            geom_vline(data = df_ed_slt, aes(xintercept = LDS_LowerBound), linetype = "dotted", color = "#009E73", alpha = 0.5) + 
-            geom_vline(data = df_ed_slt, aes(xintercept = LDS_UpperBound), linetype = "dotted", color = "#009E73", alpha = 0.5)
-        }
-      }
-    }
-    
-    ## plotly
+    ## plot
+    source(file.path("src/drc_wt.R"), local = TRUE)$value
+    # remove the legend
+    p_slt <- p_slt + theme(legend.position = "none")
     p <- ggplotly(p_slt, tooltip = "text")
     
     return(p)
     
   })
   
+### mutant DRC --------------------------------------------------------------
+
+  demo_p_mut <- reactive({
+    req(input$agi_slt, data())
+    agi_slt <- unname(input$agi_slt)
+    genotype_list <- data_values$genotype_list
+    df_curve_slt <- rbind(df_curve_wt(), df_curve_sfko1(), df_curve_sfko2(), df_curve_sfko3()) %>% 
+      filter(AGI %in% agi_slt) %>% 
+      filter(Genotype %in% genotype_list) %>% 
+      unnest()
+    df_point_slt <- df_point() %>% 
+      filter(AGI %in% agi_slt) %>% 
+      filter(Genotype %in% genotype_list) %>% 
+      unnest()
+    df_point_mean_slt <- df_point_mean() %>% 
+      filter(Genotype %in% genotype_list) %>% 
+      filter(AGI %in% agi_slt)
+    df_ed_slt <- df_ed_slt()
+    
+    ## AGI
+    df_curve_slt$AGI <- factor(df_curve_slt$AGI, levels = agi_slt)
+    df_point_slt$AGI <- factor(df_point_slt$AGI, levels = agi_slt)
+    df_point_mean_slt$AGI <- factor(df_point_mean_slt$AGI, levels = agi_slt)
+    df_ed_slt$AGI <- factor(df_ed_slt$AGI, levels = agi_slt)
+    ## Genotype
+    df_curve_slt$Genotype <- factor(df_curve_slt$Genotype, levels = genotype_list)
+    df_point_slt$Genotype <- factor(df_point_slt$Genotype, levels = genotype_list)
+    df_point_mean_slt$Genotype <- factor(df_point_mean_slt$Genotype, levels = genotype_list)
+    df_ed_slt$Genotype <- factor(df_ed_slt$Genotype, levels = genotype_list)
+    
+    ## plot on the left -- Col-0
+    
+    source(file.path("src/drc_wt.R"), local = TRUE)$value
+    # remove the legend
+    p_slt <- p_slt + theme(legend.position = "none")
+    
+    ## plot on the right - with all selected genotype
+    # palette
+    pal <- c("#D55E00")
+    if ("sfkoI" %in% genotype_list) {
+      pal <- c(pal, "#E69F00")
+    }
+    if ("sfkoII" %in% genotype_list) {
+      pal <- c(pal, "#56B4E9")
+    }
+    if ("sfkoIII" %in% genotype_list) {
+      pal <- c(pal, "#009E73")
+    }
+    
+    p2 <- ggplot() + 
+      # the major plot
+      geom_point(data = df_point_slt, 
+                 aes(x = ABA_nM, y = TPM, color = Genotype, 
+                     text = paste("ABA [nM]:", round(ABA_nM, 2), "<br>Expression (TPM):", round(TPM, 2))), 
+                 alpha = 1/3) + 
+      geom_line(data = df_curve_slt, aes(x = ABA_nM, y = Prediction, color = Genotype)) +
+      facet_wrap(ordered(AGI) ~ ., ncol = 1, scales = "free_y") +
+      scale_x_log10() + 
+      # labs(x = "ABA [nM]",  y = "Expression (TPM)") + 
+      scale_color_manual(values = pal) +
+      scale_fill_manual(values = pal) +
+      theme_bw() +
+      theme(panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank()) + 
+      theme(axis.title.x = element_text(size = 14),
+            axis.text.x = element_text(size = 10),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            strip.text.x = element_text(size = 12),
+            legend.position = "none") + 
+      theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0), "in"))
+    
+    ## plotly
+    p <- subplot(
+      ggplotly(p_slt),
+      ggplotly(p2),
+      nrows = 1,
+      shareX = FALSE,
+      shareY = FALSE
+    ) %>%
+      layout(
+        margin = list(b = 80, l = 80),
+        
+        annotations = list(
+          list(
+            text = "ABA [nM]",
+            x = 0.5,
+            y = -0.18,
+            xref = "paper",
+            yref = "paper",
+            xanchor = "center",
+            yanchor = "top",
+            showarrow = FALSE,
+            font = list(size = 20)
+          ),
+          list(
+            text = "Expression (TPM)",
+            x = -0.08,
+            y = 0.5,
+            xref = "paper",
+            yref = "paper",
+            textangle = -90,
+            xanchor = "center",
+            yanchor = "middle",
+            showarrow = FALSE,
+            font = list(size = 20)
+          )
+        )
+      )
+    
+    return(p)
+    
+  })
+  
   output$dr_curve <- renderPlotly({
-    return(demo_p())
+    if (isTRUE(input$mut_drc)) {
+      return(demo_p_mut())
+    } else {
+      return(demo_p())
+    }
+    
   })
 
 ## Download pdf ------------------------------------------------------------
@@ -736,138 +863,187 @@ function(input, output, session) {
     
     content = function(file) {
       
+      genotype_list <- data_values$genotype_list
+      agi_list_val <- data_values$agi_list
+      
+      # ed-related dataframe
       df_ed_exp_val <- df_ed_exp() %>%
         arrange(factor(AGI, levels = data_values$agi_list))
-      df_point_val <- df_point() %>%
-        arrange(factor(AGI, levels = data_values$agi_list))
-      df_curve_val <- df_curve() %>%
-        arrange(factor(AGI, levels = data_values$agi_list))
       
-      # Open the PDF device using 'file' as the destination
-      pdf(file = file, width = 1000/72, height = 1250/72)
       
-      N <- 8
-      agi_list_val <- data_values$agi_list
-      mx <- ceiling(length(agi_list_val)/N)
-      
-      for (j in seq_len(mx)) {
-        a <- (j - 1) * N + 1
-        b <- if (j < mx) j*N else length(agi_list_val)
-        n <- b - a + 1
+      if (isTRUE(input$mut_drc)) {
         
-        # Subset data for pages
-        df_point_slt <- df_point_val[a:b, ] %>% unnest() 
-        df_curve_slt <- df_curve_val[a:b, ] %>% unnest() 
-        df_ed_slt<- df_ed_exp_val[a:b, ]
+        # dataframe
+        df_point_val <- df_point() %>% 
+          filter(Genotype %in% genotype_list) %>% 
+          unnest() %>% 
+          group_by(AGI) %>% nest() %>% 
+          arrange(factor(AGI, levels = data_values$agi_list))
+        df_curve_val <- rbind(df_curve_wt(), df_curve_sfko1(), df_curve_sfko2(), df_curve_sfko3()) %>% 
+          filter(Genotype %in% genotype_list) %>% 
+          unnest() %>% 
+          group_by(AGI) %>% nest() %>% 
+          arrange(factor(AGI, levels = data_values$agi_list))
         
-        df_curve_slt$AGI <- factor(df_curve_slt$AGI, levels = unique(df_curve_slt$AGI))
-        df_point_slt$AGI <- factor(df_point_slt$AGI, levels = unique(df_point_slt$AGI))
-        df_ed_slt$AGI <- factor(df_ed_slt$AGI, levels = unique(df_ed_slt$AGI))
+        # export pdf
+        pdf(file = file, width = 1200/72, height = 1500/72)
+        N <- 4
+        mx <- ceiling(length(agi_list_val)/N)
         
-        # plot
-        x <- ceiling(n/2)
-        p_slt <- ggplot() + 
-          # the major plot
-          geom_point(data = df_point_slt, aes(x = ABA_nM, y = TPM, 
-                                              text = paste("ABA [nM]:", round(ABA_nM, 2), "<br>Expression (TPM):", round(TPM, 2))), 
-                     color = "#D55E00", alpha = 1/3) + 
-          geom_line(data = df_curve_slt, aes(x = ABA_nM, y = Prediction), color = "#D55E00") +
-          facet_wrap(. ~ ordered(AGI), ncol = 2, scales = "free_y") +
-          scale_x_log10() + 
-          labs(x = "ABA [nM]",  y = "Expression (TPM)") + 
-          theme_bw() +
-          theme(panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank()) + 
-          theme(axis.title = element_text(size = 14),
-                axis.text = element_text(size = 10),
-                strip.text.x = element_text(size = 12),
-                legend.title = element_text(size = 14), 
-                legend.text = element_text(size = 10)) +
-          theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "in"))
-        # ed50 lines
-        if (input$plot_ed50_ck == TRUE) {
-          p_slt <- p_slt +
-            geom_hline(data = df_ed_slt, aes(yintercept = Response_at_Low_EC50), linetype = "longdash", color = "#0072B2", alpha = 0.5) + 
-            geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50, 
-                                             text = paste("EC50:", round(Low_EC50, 2),"<br>Response_at_EC50:", round(Response_at_Low_EC50, 2))),
-                       linetype = "longdash", color = "#0072B2", alpha = 0.5)
-          if (input$plot_ci_ck == TRUE) {
-            p_slt <- p_slt + 
-              geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_LowerBound), linetype = "dotted", color = "#0072B2", alpha = 0.5) + 
-              geom_vline(data = df_ed_slt, aes(xintercept = Low_EC50_UpperBound), linetype = "dotted", color = "#0072B2", alpha = 0.5)
-          }
-        }
-        
-        # bmd lines
-        if (input$plot_bmd_ck == TRUE) {
-          p_slt <- p_slt +
-            geom_hline(data = df_ed_slt, aes(yintercept = Response_at_BMD), linetype = "dashed", color = "#56B4E9", alpha = 0.5) + 
-            geom_vline(data = df_ed_slt, aes(xintercept = BMD, 
-                                             text = paste("BMD:", round(BMD, 2),"<br>Response_at_BMD:", round(Response_at_BMD, 2))), 
-                       linetype = "dashed", color = "#56B4E9", alpha = 0.5)
-          if (input$plot_ci_ck == TRUE) {
+        for (j in 1: mx) {
+          a <- (j - 1) * N + 1
+          if (j < mx) {b <- j*N} else {b <- length(agi_list_val)}
+          n <- b - a + 1
+          
+          # Subset data for pages
+          df_point_slt <- df_point_val[a:b, ] %>% unnest() 
+          df_curve_slt <- df_curve_val[a:b, ] %>% unnest() 
+          df_ed_slt<- df_ed_exp_val[a:b, ]
+          
+          df_curve_slt$AGI <- factor(df_curve_slt$AGI, levels = unique(df_curve_slt$AGI))
+          df_point_slt$AGI <- factor(df_point_slt$AGI, levels = unique(df_point_slt$AGI))
+          df_ed_slt$AGI <- factor(df_ed_slt$AGI, levels = unique(df_ed_slt$AGI))
+          
+          # plot
+          x <- n
+          
+          ## Col-0 only
+          
+          source(file.path("src/drc_wt.R"), local = TRUE)$value
+          
+          # change the facet order and font size
+          p_slt <- p_slt + 
+            facet_wrap(ordered(AGI) ~ ., ncol = 1, scales = "free_y") +
+            theme(axis.title = element_text(size = 20),
+                  axis.text = element_text(size = 16),
+                  strip.text.x = element_text(size = 18),
+                  legend.key = element_rect(fill = "white"),
+                  legend.title = element_text(size = 20, color = "white"),
+                  legend.text = element_text(size = 18, color = "white"),
+                  legend.position = "bottom") + guides(fill = guide_legend(nrow = 1)) + guides(color = guide_legend(override.aes = list(color = NA))) + 
+            theme(plot.margin = unit(c(0.5, 0.5, 0.5*floor(x/4), 0.5), "in"))
+          
+          # gene info.
+          if (input$gene_info == TRUE){
             p_slt <- p_slt +
-              geom_vline(data = df_ed_slt, aes(xintercept = BMD_LowerBound), linetype = "dotted", color = "#56B4E9", alpha = 0.5) + 
-              geom_vline(data = df_ed_slt, aes(xintercept = BMD_UpperBound), linetype = "dotted", color = "#56B4E9", alpha = 0.5)
+              ggpp::geom_text_npc(data = df_ed_slt, aes(npcx = "left", npcy = "top", label = TAIR_Symbol), size = 6, color = "black")
           }
+          
+          ## Mutants
+          # palette
+          pal <- c("#D55E00")
+          if ("sfkoI" %in% genotype_list) {
+            pal <- c(pal, "#E69F00")
+          }
+          if ("sfkoII" %in% genotype_list) {
+            pal <- c(pal, "#56B4E9")
+          }
+          if ("sfkoIII" %in% genotype_list) {
+            pal <- c(pal, "#009E73")
+          }
+          
+          p2 <- ggplot() + 
+            # the major plot
+            geom_point(data = df_point_slt, 
+                       aes(x = ABA_nM, y = TPM, color = Genotype, 
+                           text = paste("ABA [nM]:", round(ABA_nM, 2), "<br>Expression (TPM):", round(TPM, 2))), 
+                       alpha = 1/3) + 
+            geom_line(data = df_curve_slt, aes(x = ABA_nM, y = Prediction, color = Genotype)) +
+            facet_wrap(ordered(AGI) ~ ., ncol = 1, scales = "free_y") +
+            scale_x_log10() + 
+            labs(x = "ABA [nM]",  y = "Expression (TPM)") + 
+            scale_color_manual(values = pal) +
+            scale_fill_manual(values = pal) +
+            theme_bw() +
+            theme(panel.grid.major = element_blank(),
+                  panel.grid.minor = element_blank()) + 
+            theme(axis.title = element_text(size = 20),
+                  axis.text = element_text(size = 16),
+                  strip.text.x = element_text(size = 18),
+                  legend.title = element_text(size = 20),
+                  legend.text = element_text(size = 18),
+                  legend.position = "bottom") + guides(fill = guide_legend(nrow = 1)) + 
+            theme(plot.margin = unit(c(0.5, 0.5, 0.5*floor(x/4), 0.5), "in"))
+          
+          if (n == 4) {
+            print(ggarrange(p_slt, p2, ncol = 2, nrow = 1))
+          } else {
+            print(ggarrange(p_slt, p2, NULL, NULL,  ncol = 2, nrow = 2, heights = c(n*0.25+0.05, 1-(n*0.25+0.05))))
+          }
+          
         }
         
-        ## max & min response
-        if (input$plot_resline_ck == TRUE) {
-          p_slt <- p_slt +
-            geom_hline(data = df_ed_slt, aes(yintercept = Maximum_Response, 
-                                             text = paste("Max:", round(Maximum_Response, 2))), linetype = "dotted", color = "#009E73", alpha = 0.5) + 
-            geom_hline(data = df_ed_slt, aes(yintercept = Minimum_Response, 
-                                             text = paste("Min:", round(Minimum_Response, 2))), linetype = "dotted", color = "#009E73", alpha = 0.5)
-        }
+        dev.off()
         
-        # lds & m
-        if (any(df_ed_slt$Cluster == 1) && all(!is.na(df_ed_slt$Cluster))) {
-          if (input$plot_lds_m_ck == TRUE) {
+      } else {
+        
+        # dataframe
+        df_point_val <- df_point() %>% 
+          filter(Genotype == "Col-0") %>% 
+          arrange(factor(AGI, levels = data_values$agi_list))
+        df_curve_val <- df_curve_wt() %>% 
+          arrange(factor(AGI, levels = data_values$agi_list))
+        
+        # export pdf
+        pdf(file = file, width = 1000/72, height = 1250/72)
+        
+        N <- 8
+        mx <- ceiling(length(agi_list_val)/N)
+        
+        for (j in seq_len(mx)) {
+          a <- (j - 1) * N + 1
+          b <- if (j < mx) j*N else length(agi_list_val)
+          n <- b - a + 1
+          
+          # Subset data for pages
+          df_point_slt <- df_point_val[a:b, ] %>% unnest() 
+          df_curve_slt <- df_curve_val[a:b, ] %>% unnest() 
+          df_ed_slt<- df_ed_exp_val[a:b, ]
+          
+          df_curve_slt$AGI <- factor(df_curve_slt$AGI, levels = unique(df_curve_slt$AGI))
+          df_point_slt$AGI <- factor(df_point_slt$AGI, levels = unique(df_point_slt$AGI))
+          df_ed_slt$AGI <- factor(df_ed_slt$AGI, levels = unique(df_ed_slt$AGI))
+          
+          # plot
+          x <- ceiling(n/2)
+          
+          source(file.path("src/drc_wt.R"), local = TRUE)$value
+          
+          # change the font size
+          p_slt <- p_slt + 
+            theme(axis.title = element_text(size = 20),
+                  axis.text = element_text(size = 16),
+                  strip.text.x = element_text(size = 18),
+                  legend.title = element_text(size = 20), 
+                  legend.text = element_text(size = 18),
+                  legned.position = "bottom")
+          
+          # gene info.
+          if (input$gene_info == TRUE){
             p_slt <- p_slt +
-              # lds lines
-              geom_hline(data = df_ed_slt, aes(yintercept = Response_at_LDS), linetype = "dashed", color = "#009E73", alpha = 0.5) + 
-              geom_vline(data = df_ed_slt, aes(xintercept = LDS, 
-                                               text = paste("LDS:", round(LDS, 2),"<br>Response_at_LDS:", round(Response_at_LDS, 2))),
-                         linetype = "dashed", color = "#009E73", alpha = 0.5) + 
-              # m lines
-              geom_hline(data = df_ed_slt, aes(yintercept = Response_at_M), linetype = "dashed", color = "gold2", alpha = 0.5) + 
-              geom_vline(data = df_ed_slt, aes(xintercept = M, 
-                                               text = paste("M:", round(M, 2),"<br>Response_at_M:", round(Response_at_M, 2))), 
-                         linetype = "dashed", color = "gold2", alpha = 0.5)
-            
-            if (input$plot_ci_ck == TRUE) {
-              p_slt <- p_slt +
-                geom_vline(data = df_ed_slt, aes(xintercept = LDS_LowerBound), linetype = "dotted", color = "#009E73", alpha = 0.5) + 
-                geom_vline(data = df_ed_slt, aes(xintercept = LDS_UpperBound), linetype = "dotted", color = "#009E73", alpha = 0.5)
-            }
+              ggpp::geom_text_npc(data = df_ed_slt, aes(npcx = "left", npcy = "top", label = TAIR_Symbol), size = 6, color = "black")
+          }
+          
+          # Print the figure(s)
+          if (n == 1) {
+            print(
+              ggarrange(p_slt, NULL, NULL,
+                        ncol = 2, nrow = 2,
+                        widths = c(7, 4.8),
+                        heights = c(x/4 + 1/28, (4 - x)/4))
+            )
+          } else {
+            print(
+              ggarrange(p_slt, NULL,
+                        ncol = 1, nrow = 2,
+                        heights = c(x/4 + 1/28, (4 - x)/4))
+            )
           }
         }
         
-        # gene info.
-        if (input$gene_info == TRUE){
-          p_slt <- p_slt +
-            ggpp::geom_text_npc(data = df_ed_slt, aes(npcx = "left", npcy = "top", label = TAIR_Symbol), size = 6, color = "black")
-        }
+        dev.off()
         
-        # Print the figure(s)
-        if (n == 1) {
-          print(
-            ggarrange(p_slt, NULL, NULL,
-                      ncol = 2, nrow = 2,
-                      widths = c(7, 4.8),
-                      heights = c(x/4 + 1/28, (4 - x)/4))
-          )
-        } else {
-          print(
-            ggarrange(p_slt, NULL,
-                      ncol = 1, nrow = 2,
-                      heights = c(x/4 + 1/28, (4 - x)/4))
-          )
-        }
       }
-      
-      dev.off()
     }
   )
   
