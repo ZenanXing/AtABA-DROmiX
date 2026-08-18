@@ -1,6 +1,8 @@
 # Define server logic
 function(input, output, session) {
-  
+  # bs_themer()
+  # uses 'helpfiles' directory by default
+  observe_helpers(withMathJax = TRUE)
 # Gene List ---------------------------------------------------------------
   data <- eventReactive(input$upldData_Butn,
                         {if (input$input_select == "upld") {
@@ -54,7 +56,7 @@ function(input, output, session) {
       Genotype = c("Col-0", "sfkoI", "sfkoII", "sfkoIII")
     )
     df_geno_slt <- data.frame(
-      ckgrp = input$genotype
+      ckgrp = c("col", input$genotype)
     ) %>% left_join(df_geno, by = "ckgrp")
     data_values$genotype_list <- df_geno_slt$Genotype
     
@@ -194,6 +196,7 @@ function(input, output, session) {
 # Clear Data Button -------------------------------------------------------
   observeEvent(input$clearText_Butn, {
     updateTextAreaInput(session, inputId = "text1", label = "", value = "")
+    data_values$agi_list <- NULL
   })
   
 # Heatmap - ABA vs Mock -----------------------------------------------------------------
@@ -317,10 +320,10 @@ function(input, output, session) {
       # Heatmap
       div(style = "margin-top: 10px"),
       plotlyOutput("heatmap_aba", width = "100%", height = "600px") %>% shinycssloaders::withSpinner(), 
-      p(tags$b("Note:"), "Only genes considered as expressed in our experiment are displayed."),
+      p(tags$b("Note:"), "Only genes considered expressed in our experiment are displayed. Hover over the plot to view gene-specific details, including logFC, FDR, gene name, and ABA concentration."),
       # Download
       div(style = "margin-top: 20px"),
-      h5("Download"),
+      h5(tags$b("Download")),
       div(style = "margin-top: -10px"),
       hr(),
       div(style = "margin-top: -10px"),
@@ -332,11 +335,12 @@ function(input, output, session) {
                       choices = list("EXCEL", "CSV", "TSV", "TXT"), selected = "EXCEL")
       ),
       div(),
-      div(style = "display: inline-block; vertical-align: top; width: 200px;",
+      div(style = "display: inline-block; vertical-align: top;",
           downloadButton(outputId = "dl_df_hm_aba", label = "Download Dataframe")),
-      div(style = "display: inline-block; vertical-align: top; width: 200px;",
+      div(style = "display: inline-block; vertical-align: top;",
           downloadButton(outputId = "dl_hm_aba", label = "Download Heatmap")),
-      div(style = "margin-top: 20px")
+      div(style = "margin-top: 20px"),
+      p(tags$b("Note:"), "Change the file name if needed. The heatmap is interactive and will be downloaded as an HTML file.")
     )
   })
   
@@ -371,10 +375,10 @@ function(input, output, session) {
 
   # Show/Hide this tab
   observe({
-    if (length(input$genotype) == 1 && input$genotype == "col") {
-      hideTab(inputId = "tabs1", target = "Heatmap - Mutant vs Col-0")
+    if (is.null(input$genotype)) {
+      hideTab(inputId = "tabs1", target = "hm_mut")
     } else {
-      showTab(inputId = "tabs1", target = "Heatmap - Mutant vs Col-0")
+      showTab(inputId = "tabs1", target = "hm_mut")
     }
   })
 
@@ -503,10 +507,10 @@ function(input, output, session) {
       # Heatmap
       div(style = "margin-top: 10px"),
       plotlyOutput("heatmap_mut", width = "100%", height = "600px") %>% shinycssloaders::withSpinner(), 
-      p(tags$b("Note:"), "Only genes considered as expressed in our experiment are displayed."),
+      p(tags$b("Note:"), "Only genes considered expressed in our experiment are displayed. Hover over the plot to view gene-specific details, including logFC, FDR, gene name, and ABA concentration."),
       # Download
       div(style = "margin-top: 20px"),
-      h5("Download"),
+      h5(tags$b("Download")),
       div(style = "margin-top: -10px"),
       hr(),
       div(style = "margin-top: -10px"),
@@ -518,11 +522,12 @@ function(input, output, session) {
                       choices = list("EXCEL", "CSV", "TSV", "TXT"), selected = "EXCEL")
       ),
       div(),
-      div(style = "display: inline-block; vertical-align: top; width: 200px;",
+      div(style = "display: inline-block; vertical-align: top;",
           downloadButton(outputId = "dl_df_hm_mut", label = "Download Dataframe")),
-      div(style = "display: inline-block; vertical-align: top; width: 200px;",
+      div(style = "display: inline-block; vertical-align: top;",
           downloadButton(outputId = "dl_hm_mut", label = "Download Heatmap")),
-      div(style = "margin-top: 20px")
+      div(style = "margin-top: 20px"),
+      p(tags$b("Note:"), "Change the file name if needed. The heatmap is interactive and will be downloaded as an HTML file.")
     )
   })
   
@@ -565,7 +570,7 @@ function(input, output, session) {
       dplyr::select(AGI, tair_symbol) %>% 
       left_join(df_ed(), by = "AGI") %>% 
       arrange(factor(AGI, levels = data_values$agi_list))
-    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Genotype", "Cluster", "Trend", "Sensitivity", "Membership", "Maximum_Response", "Minimum_Response",
+    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Genotype", "Cluster", "Pattern", "Sensitivity", "Membership", "Maximum_Response", "Minimum_Response",
                            "Response_at_BMD", "BMD", "BMD_LowerBound", "BMD_UpperBound", 
                            "Response_at_Low_EC50", "Low_EC50", "Low_EC50_LowerBound", "Low_EC50_UpperBound", 
                            "Response_at_High_EC50", "High_EC50", "High_EC50_LowerBound", "High_EC50_UpperBound", 
@@ -583,7 +588,7 @@ function(input, output, session) {
     df_temp <- df_ed_exp() %>% 
       dplyr::select(1:6, 15:17, 11:13) %>% 
       filter(!is.na(Low_EC50)|!is.na(BMD))
-    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Genotype", "Cluster", "Trend", "Sensitivity", 
+    colnames(df_temp) <- c("AGI", "TAIR_Symbol", "Genotype", "Cluster", "Pattern", "Sensitivity", 
                            "EC\u2085\u2080", "EC\u2085\u2080\nLowerBound", "EC\u2085\u2080\nUpperBound", 
                            "BMD", "BMD\nLowerBound", "BMD\nUpperBound")
     df_temp <- df_temp %>% mutate(across(7:ncol(df_temp), ~ map_chr(.x, display_format)))
@@ -607,15 +612,15 @@ function(input, output, session) {
     tagList(
       # Table
       div(style = "margin-top: 30px"),
-      h5(HTML(paste0("EC", tags$sub("50"), " & BMD Estimation Table")), align = 'center'),
+      tags$b(h5(HTML(paste0("EC", tags$sub("50"), " & BMD Estimation Table (Wild-type)")), align = 'center')),
       div(style = "margin-top: -10px"),
       #hr(),
       #div(style = "margin-top: -10px"),
       DT::dataTableOutput("tb_ed") %>% shinycssloaders::withSpinner(),
-      p(tags$b("Note:"), HTML(paste0("Only genes with valid EC", tags$sub("50"), " or BMD values are displayed."))),
+      p(tags$b("Note: "), "Only genes with valid EC", tags$sub("50"), " or BMD values in the wild-type are displayed. Please click the question mark next to the ", tags$b("'Gene List'"), " on the left for a detailed explanation of the classification of ABA-responsive genes."),
       # Download
       div(style = "margin-top: 20px"),
-      h5("Download"),
+      h5(tags$b("Download")),
       div(style = "margin-top: -10px"),
       hr(),
       div(style = "margin-top: -10px"),
@@ -623,11 +628,12 @@ function(input, output, session) {
           textInput(inputId = "file_name", label = "Enter a file name: ", value = paste0("Sensitivity_Table_", Sys.Date()))
       ),
       div(style = "display: inline-block; vertical-align: top; width: 150px;", 
-          selectInput(inputId = "file_type", label = "Select file type:", 
+          selectInput(inputId = "file_type", label = "Select file format:", 
                       choices = list("EXCEL", "CSV", "TSV", "TXT"), selected = "EXCEL")
       ),
-      div(style = "width: 150px;",
-          downloadButton(outputId = "dl_df", label = "Download")),
+      div(downloadButton(outputId = "dl_df", label = "Download")),
+      div(style = "margin-top: 20px"),
+      p(tags$b("Note:"), "Change the file name and format if needed."),
       div(style = "margin-top: 10px"), 
       tags$b("References:"),
       p(em("Ritz C, Baty F, Streibig JC, Gerhard D (2015) Dose-Response Analysis Using R. PLoS One. 10(12)")), 
@@ -654,20 +660,46 @@ function(input, output, session) {
   
 # Dose-Response Curves ----------------------------------------------------
   
+  # Include the mutants
+  output$mut_drc_ck <- renderUI({
+    if (is.null(input$genotype)) {
+      return(NULL)
+    }
+    tagList(
+      div(style = "display: inline-block; vertical-align: top; margin-top: 10px;", 
+          "- Include the Mutants "),
+      div(style = "display: inline-block; vertical-align: top; margin-top: 10px; margin-left: 5px;", 
+          checkboxInput(
+            inputId = "mut_drc",
+            label = NULL,
+            value = TRUE
+          )
+          )
+      )
+  })
+  mut_drc <- reactive({
+    if (is.null(input$genotype)) {
+      return(FALSE)
+    }
+    isTRUE(input$mut_drc)
+  })
+  
   # UI for selecting rep genes
   output$agi_slt_ui <- renderUI({
     req(data_values$agi_list)
-    if (isTRUE(input$mut_drc)) {
+    if (mut_drc()) {
       max <- 1
     } else {
       max <- 2
     }
+    tagList(
     selectizeInput(inputId = "agi_slt",
-                   label = "Select the genes:",
+                   label = "- Select the genes:",
                    choices = data_values$agi_list, 
-                   selected = head(data_values$agi_list, 1),
+                   selected = head(data_values$agi_list, max),
                    multiple = TRUE,
                    options = list(maxItems = max))
+    )
   })
   
   # Selected dataframe
@@ -682,7 +714,7 @@ function(input, output, session) {
     req(df_ed_exp())
     if (any(df_ed_exp()$Cluster == 1) && all(!is.na(df_ed_exp()$Cluster))) {
       tagList(
-        div(), 
+        div(style = "margin-top: 10px"), 
         div(style = "display: inline-block; vertical-align: top; margin-top: -15px;", 
             checkboxInput(inputId = "plot_lds_m_ck", label = "LDS & M", value = FALSE)
         )
@@ -690,14 +722,6 @@ function(input, output, session) {
     }
   })
   
-  # Include the mutants
-  output$mut_drc_ck <- renderUI({
-    if (!(length(input$genotype) == 1 && input$genotype == "col")) {
-      checkboxInput(inputId = "mut_drc",
-                    label = "Include the Mutants",
-                    value = TRUE)
-    }
-  })
   
 ## Demo Plot ---------------------------------------------------------------
 
@@ -845,7 +869,7 @@ function(input, output, session) {
   })
   
   output$dr_curve <- renderPlotly({
-    if (isTRUE(input$mut_drc)) {
+    if (mut_drc()) {
       return(demo_p_mut())
     } else {
       return(demo_p())
@@ -871,7 +895,7 @@ function(input, output, session) {
         arrange(factor(AGI, levels = data_values$agi_list))
       
       
-      if (isTRUE(input$mut_drc)) {
+      if (mut_drc()) {
         
         # dataframe
         df_point_val <- df_point() %>% 

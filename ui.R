@@ -4,6 +4,7 @@
 library(shiny)
 library(shinythemes)
 library(shinycssloaders)
+library(shinyhelper)
 library(shinyjs)
 library(bslib)
 library(openxlsx)
@@ -24,7 +25,7 @@ navbarPage(
   windowTitle  = "AtABA-DROmiX", 
   
   # Theme from bslib
-  theme = bs_theme(bootswatch = "cerulean"), 
+  theme = bs_theme(bootswatch = "cosmo"), 
   useShinyjs(),
   
   # SidebarLayout
@@ -38,17 +39,28 @@ navbarPage(
         ## Genotype ----------------------------------------------------------------
         
         wellPanel(
-          h5("Select the Gentoype:"), 
+          div(style = "margin-right: 15px;", 
+              h5(tags$b("Gentoype") %>% 
+                   helper(icon = "question-circle", 
+                          type = "markdown",
+                          content = "Genotype",
+                          buttonLabel = "Close",
+                          size = "l")
+                 )
+              ), 
+          p(tags$b("- Wild-type: "), "Col-0"),
+          div(style = "margin-top: -15px;",  tags$b("- Mutants: ")),
+          tags$style(HTML("#genotype .checkbox-inline {margin-right: 5px;}")),
           checkboxGroupInput(inputId = "genotype",
                              label = NULL, inline = TRUE, 
-                             selected = "col",
-                             choiceNames = list("Col-0", HTML("<em>sfkoI</em>"),
+                             selected = NULL,
+                             choiceNames = list(HTML("<em>sfkoI</em>"),
                                                 HTML("<em>sfkoII</em>"), HTML("<em>sfkoIII</em>")),
-                             choiceValues = c("col", "i", "ii", "iii")),
+                             choiceValues = c("i", "ii", "iii")),
           # Note
-          p(style = "text-align: left; margin-top: 10px;", 
-            tags$b("Note: "), "Col-0 is the wild-type; ", em("sfkoI"), ", ", em("sfkoII"), ", and ", em("sfkoIII"), 
-            " are ABA receptor subfamily I, II, and III knockout mutants."
+          p(style = "text-align: left; margin-top: -15px;", 
+            tags$b("Note: "), em("sfkoI"), ", ", em("sfkoII"), ", and ", em("sfkoIII"), 
+            " are ABA receptor subfamily I, II, and III knockout mutants. Click on the question mark for more information."
           )
           
         ),
@@ -58,15 +70,23 @@ navbarPage(
         ## Gene List ---------------------------------------------------------------
         
         wellPanel(
-          h5("Upload the Gene List:"),
+          div(style = "margin-right: 15px;", 
+              h5(tags$b("Gene List") %>% 
+                   helper(icon = "question-circle", 
+                          type = "markdown",
+                          content = "Gene_List",
+                          buttonLabel = "Close",
+                          size = "l")
+                 )
+              ),
           
           # Select the way to input list
           div(style = "margin-top: -20px;"), 
           selectInput(inputId = "input_select",
                       label = "",
-                      choices = c("Paste the list" = "pst",
-                                  "Select a specific ABA responder group" = "slt",
-                                  "Upload the list" = "upld"),
+                      choices = c("Paste a gene list" = "pst",
+                                  "Upload a gene list" = "upld",
+                                  "Select a predefined ABA response group" = "slt"),
                       selected = "pst"),
           
           
@@ -75,7 +95,7 @@ navbarPage(
                            
                            # TextArea
                            tags$b(h6("Paste list below:")), 
-                           div(style = "margin-top: -20px;"), 
+                           div(style = "margin-top: -10px;"),
                            textAreaInput(inputId = "text1", 
                                          value = "AT3G11410\nAT5G52310\nAT3G61430\nAT2G38310", 
                                          height = "160px", label = ""), 
@@ -97,9 +117,9 @@ navbarPage(
                            radioButtons(inputId = "class_tp", 
                                         label = NULL,
                                         choices = c("by Cluster" = "clst",
-                                                    "by Sensitivity" = "sens"),
+                                                    "By Response Features" = "sens"),
                                         selected = "clst",
-                                        inline = TRUE),
+                                        inline = FALSE),
                            conditionalPanel(condition = "input.class_tp == 'clst'",
                                             # cluster
                                             selectInput(inputId = "class_1",
@@ -110,7 +130,7 @@ navbarPage(
                            conditionalPanel(condition = "input.class_tp == 'sens'",
                                             # trend
                                             selectInput(inputId = "class_2",
-                                                        label = "Trend:",
+                                                        label = "Pattern:",
                                                         choices = c("Bell", "Up", "Down"),
                                                         selected = "Bell"),
                                             conditionalPanel(condition = "input.class_2 == 'Bell'",
@@ -136,8 +156,8 @@ navbarPage(
                                             )
                                             
                            ),
-                           p(style = "text-align: left; margin-top: 10px;", 
-                             tags$b("Note: "), "Please refer to our publication for more details.")
+                           p(style = "text-align: left; margin-top: 10px; padding-right: 6px;", 
+                             tags$b("Note: "), "Please click the question mark for a detailed explanation of the classification of ABA-responsive genes.")
                            
           ),
           
@@ -167,29 +187,38 @@ navbarPage(
         tabsetPanel(
           id = "tabs1",
           # Heatmap - ABA vs Mock
-          tabPanel(title = "Heatmap - ABA vs Mock",
+          tabPanel(title = tags$b("Heatmap - ABA vs Mock"),
                    uiOutput(outputId = "hm_aba")
           ),
           # Heatmap - Mutant vs Col-0
-          tabPanel(title = "Heatmap - Mutant vs Col-0",
+          tabPanel(title = tags$b("Heatmap - Mutant vs Col-0"),
+                   value = "hm_mut",
                    uiOutput(outputId = "hm_mut")
           ),
           # Sensitivity
-          tabPanel(title = "Sensitivity",
+          tabPanel(title = tags$b("Sensitivity"),
                    uiOutput(outputId = "ed_table")
           ),
           # Dose-response Curves
-          tabPanel(title = "Dose-Response Curves",
+          tabPanel(title = tags$b("Dose-Response Curves"),
                    # Demo
                    div(style = "margin-top: 20px"),
-                   h5("Demo"),
-                   #div(style = "margin-top: -10px"),
+                   div(style = "display: inline-block; vertical-align: top;", 
+                       h5(
+                         span(style = "margin-right: 20px;",
+                              tags$b("Demo")) %>% 
+                           helper(icon = "question-circle", 
+                                  type = "markdown",
+                                  content = "Demo",
+                                  buttonLabel = "Close",
+                                  size = "l"))
+                       ),
+                   div(style = "margin-top: 10px"),
                    #hr(),
-                   div(style = "margin-top: 20px"),
-                   uiOutput(outputId = "agi_slt_ui"),
                    uiOutput(outputId = "mut_drc_ck"), 
-                   div(style = "margin-top: 20px;"),  
-                   "Show the ED-related values and the corresponding responses：", 
+                   uiOutput(outputId = "agi_slt_ui"),
+                   div(style = "margin-top: 10px;"),
+                   p("- Show the ED-related values and the corresponding responses："), 
                    div(),
                    div(style = "vertical-align: top;", 
                        checkboxInput(inputId = "plot_ed50_ck", label = HTML(paste0("EC", tags$sub("50"))), value = FALSE)), 
@@ -201,23 +230,27 @@ navbarPage(
                        checkboxInput(inputId = "plot_resline_ck", label = "Max & Min Responses", value = FALSE)), 
                    div(style = "display: inline-block; vertical-align: top; margin-top: -15px;", 
                        checkboxInput(inputId = "plot_ci_ck", label = "Confidence Intervals", value = FALSE)),
+                   # Note
+                   p(tags$b("Note: "), "Click the question mark next to ", 
+                     tags$b("'Demo'"), " for a detailed explanation of these parameters."
+                   ),
                    plotlyOutput("dr_curve", width = "100%", height = "400px") %>% shinycssloaders::withSpinner(), 
                    
                    # Download
                    div(style = "margin-top: 20px"),
-                   h5("Download"),
+                   h5(tags$b("Download")),
                    div(style = "margin-top: -10px"),
                    hr(),
-                   "Show Info. of the genes：", 
-                   div(style = "display: inline-block; vertical-align: top;", 
-                       checkboxInput(inputId = "gene_info", label = "Gene Info.", value = FALSE)),
+                   "- Show Info. of the genes ", 
+                   div(style = "display: inline-block; vertical-align: top; margin-left: 5px;", 
+                       checkboxInput(inputId = "gene_info", label = NULL, value = FALSE)),
                    div(), 
                    div(style = "display: inline-block; vertical-align: top;", 
                        textInput(inputId = "pdf_name", label = "Enter a file name: ", value = paste0("DRC_", Sys.Date()))
                    ),
-                   div(style = "width: 150px;",
-                       downloadButton(outputId = "dl_pdf", label = "Download")),
-                   div(style = "margin-top: 20px")
+                   div(downloadButton(outputId = "dl_pdf", label = "Download")),
+                   div(style = "margin-top: 20px"),
+                   p(tags$b("Note: "), "Gene information refers to the gene name (TAIR symbol). Check the box to display the gene name in the upper-left corner of the plot. You can also change the file name as needed.")
           )
         )
       )
