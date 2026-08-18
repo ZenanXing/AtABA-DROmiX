@@ -53,7 +53,7 @@ navbarPage(
           tags$style(HTML("#genotype .checkbox-inline {margin-right: 5px;}")),
           checkboxGroupInput(inputId = "genotype",
                              label = NULL, inline = TRUE, 
-                             selected = NULL,
+                             selected = c("i", "ii", "iii"),
                              choiceNames = list(HTML("<em>sfkoI</em>"),
                                                 HTML("<em>sfkoII</em>"), HTML("<em>sfkoIII</em>")),
                              choiceValues = c("i", "ii", "iii")),
