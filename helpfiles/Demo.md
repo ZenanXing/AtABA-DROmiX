@@ -1,12 +1,12 @@
-### **Demo**
+### **Export the Dose-Response Curves**
 
-In this panel, you can visualize and export the **dose-response curves** of ABA-responsive genes together with their corresponding **ED (effective dose)-related values**.
+In this panel, you can visualize and export the **dose-response curves** of the input ABA-responsive genes together with their corresponding **ED (effective dose)-related values**.
 
-For the demo, you can preview **one gene** at a time when mutant dose-response curves are included, or **up to two genes** at a time when displaying wild-type data only. Once you are satisfied with the preview in this section, you can download the dose-response curves for **all selected genes** as a PDF from the **Download** section.
+You can preview **one gene** at a time when mutant dose-response curves are included, or **up to two genes** at a time when displaying wild-type data only. Once you are satisfied with the preview in this section, you can download the dose-response curves for **all selected genes** as a PDF from the **Download** section.
 
 #### **ED-Related Values**
 
-For all ABA-responsive genes, the **maximum and minimum response values, EC<sub>50</sub>, and BMD** are provided. For genes exhibiting a **bell-shaped response**, two additional parameters, **LDS** and **M**, are also reported.
+For all ABA-responsive genes, the **maximum and minimum response values**, **EC<sub>50</sub>**, and **BMD** are provided. For genes exhibiting a **bell-shaped response**, two additional parameters, **LDS** and **M**, are also reported.
 
 The definitions of these parameters are explained below, and their positions on monotonic and bell-shaped dose-response curves are illustrated in Figure 3.
 

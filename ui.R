@@ -206,7 +206,7 @@ navbarPage(
                    div(style = "display: inline-block; vertical-align: top;", 
                        h5(
                          span(style = "margin-right: 20px;",
-                              tags$b("Demo")) %>% 
+                              tags$b("Export the Dose-Response Curves")) %>% 
                            helper(icon = "question-circle", 
                                   type = "markdown",
                                   content = "Demo",
@@ -230,10 +230,6 @@ navbarPage(
                        checkboxInput(inputId = "plot_resline_ck", label = "Max & Min Responses", value = FALSE)), 
                    div(style = "display: inline-block; vertical-align: top; margin-top: -15px;", 
                        checkboxInput(inputId = "plot_ci_ck", label = "Confidence Intervals", value = FALSE)),
-                   # Note
-                   p(tags$b("Note: "), "Click the question mark next to ", 
-                     tags$b("'Demo'"), " for a detailed explanation of these parameters."
-                   ),
                    plotlyOutput("dr_curve", width = "100%", height = "400px") %>% shinycssloaders::withSpinner(), 
                    
                    # Download
