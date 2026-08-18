@@ -64,7 +64,7 @@ This project is licensed under the GNU General Public License, version 3 (GPLv3)
 
 *Ritz C, Baty F, Streibig JC, Gerhard D. [Dose-Response Analysis Using R](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0146021). PLoS One. 2015;10:e0146021.*  
 *Serra A, Saarimäki LA, Fratello M, Marwah VS, Greco D. [BMDx: a graphical Shiny application to perform Benchmark Dose analysis for transcriptomics data](https://academic.oup.com/bioinformatics/article/36/9/2932/5709037). Bioinformatics. 2020;36:2932–3.*  
-*Xing Z, Eckhardt J, Vaidya AS, Cutler SR. [BioCurve Analyzer: a web-based shiny app for analyzing biological response curves](https://rdcu.be/ejBEp). Plant Methods 2025; 21: 1–9*  
+*Xing Z, Eckhardt J, Vaidya AS, Cutler SR. [BioCurve Analyzer: a web-based shiny app for analyzing biological response curves](https://rdcu.be/ejBEp). Plant Methods 2025; 21: 1–9.*  
 *Futschik, M.E. and Carlisle, B. (2005). Noise-robust soft clustering of gene expression time-course data. Journal of Bioinformatics and Computational Biology, 3(4), 965–988.*  
 
 [(Back to top)](#ataba-dromix)
