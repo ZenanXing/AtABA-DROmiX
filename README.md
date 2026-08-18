@@ -49,7 +49,7 @@ To use AtABA-DROmiX locally, you can follow the steps.
 
 ### Help
 
-If you need any help or support related to this app, feel free to contact us at zxing001@ucr.edu, and the issues can also be reported on https://github.com/ZenanXing/AtABA-DROmiX/issues.  
+The data used in this app are included in a manuscript currently in preparation. If you need any help or support related to this app, feel free to contact us at zxing001@ucr.edu or cutler@ucr.edu, and the issues can also be reported on https://github.com/ZenanXing/AtABA-DROmiX/issues.  
 
 [(Back to top)](#ataba-dromix)
 
@@ -59,11 +59,6 @@ This project is licensed under the GNU General Public License, version 3 (GPLv3)
   
 [(Back to top)](#ataba-dromix)
 
-## Citations
-
-The data used in this app are included in a manuscript currently in preparation. If you use the AtABA-DROmiX, please contact us at zxing001@ucr.edu and cutler@ucr.edu.
-  
-[(Back to top)](#ataba-dromix)
 
 ## References
 
