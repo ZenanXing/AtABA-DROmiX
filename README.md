@@ -9,6 +9,14 @@ Welcome to the AtABA-DROmiX, a user-friendly application designed to help you di
 
 Here, with AtABA-DROmiX, researchers can explore the complex dose-response behaviors of genes that they are interested in by simply provide the AGI locus code (e.g. AT5G52310). You can download the results including the heatmap, fold-change data, ED-related values (EC<sub>50</sub> and BMD), and the customized dose-response curves. For genes not showing clear trends in our research, simple line plots will be provided.  
 
+Another key feature of AtABA-DROmiX is the ability to explore predefined groups of ABA-responsive genes. In our study, these genes were classified into eight clusters based on their dose-dependent expression patterns and sensitivity to ABA using *fuzzy c-means clustering* (Futschik and Carlisle, 2005).
+In the app, ABA-responsive genes can be explored using two classification options:
+
+- By Cluster: Explore genes according to the eight clusters identified from their dose-response expression patterns.
+- By Response Features: Explore genes according to either their response pattern or ABA sensitivity.
+    - Pattern: Bell, Up, or Down
+    - Sensitivity: High, Medium, or Low
+
 So, start exploring the ABA dose-response world! Let the AtABA-DROmiX help you making exciting scientific discoveries!  
 
 Happy exploring :)
@@ -27,7 +35,7 @@ To use AtABA-DROmiX locally, you can follow the steps.
   In addition, these R packages should also be installed by from CRAN using the code below.  
 
       ```
-      install.packages("shiny", "shinythemes", "shinycssloaders", "shinyjs", "bslib", "openxlsx", "tidyverse", "heatmaply", "plotly", "htmlwidgets", "DT", "ggpp", "ggpubr")
+      install.packages(c("shiny", "shinythemes", "shinycssloaders", "shinyhelper", "shinyjs", "bslib", "openxlsx", "tidyverse", "heatmaply", "plotly", "htmlwidgets", "DT", "ggpp", "ggpubr"))
       
       ```
 
@@ -62,5 +70,6 @@ The data used in this app are included in a manuscript currently in preparation.
 *Ritz C, Baty F, Streibig JC, Gerhard D. [Dose-Response Analysis Using R](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0146021). PLoS One. 2015;10:e0146021.*  
 *Serra A, Saarimäki LA, Fratello M, Marwah VS, Greco D. [BMDx: a graphical Shiny application to perform Benchmark Dose analysis for transcriptomics data](https://academic.oup.com/bioinformatics/article/36/9/2932/5709037). Bioinformatics. 2020;36:2932–3.*  
 *Xing Z, Eckhardt J, Vaidya AS, Cutler SR. [BioCurve Analyzer: a web-based shiny app for analyzing biological response curves](https://rdcu.be/ejBEp). Plant Methods 2025; 21: 1–9* 
+*Futschik, M.E. and Carlisle, B. (2005). Noise-robust soft clustering of gene expression time-course data. Journal of Bioinformatics and Computational Biology, 3(4), 965–988.*  
 
 [(Back to top)](#ataba-dromix)
