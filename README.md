@@ -29,7 +29,7 @@ AtABA-DROmiX can be used both locally and online. The app can be installed follo
 
 To use AtABA-DROmiX locally, you can follow the steps.  
 
-  1. Install R and RStudio IDE. The app has been tested with R 4.4.1 and RStudio version 2024.04.2+764.  
+  1. Install R and RStudio IDE. The app has been tested with R 4.6.0 and RStudio version 2026.04.0+526.  
 
   2. Clone or download the BioCurve Analyzer from the GitHub. You can either [clone the repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) using git or download the app as a ZIP file.  
   In addition, these R packages should also be installed by from CRAN using the code below.  
@@ -49,7 +49,7 @@ To use AtABA-DROmiX locally, you can follow the steps.
 
 ### Help
 
-The data used in this app are included in a manuscript currently in preparation. If you need any help or support related to this app, feel free to contact us at zxing001@ucr.edu or cutler@ucr.edu, and the issues can also be reported on https://github.com/ZenanXing/AtABA-DROmiX/issues.  
+The data presented in this app are part of a manuscript currently in preparation. If you have any questions, need assistance, or would like additional information about AtABA-DROmiX, please feel free to contact us at zxing001@ucr.edu or cutler@ucr.edu. You can also report bugs, request features, or submit other issues through the [AtABA-DROmiX GitHub Issues page](https://github.com/ZenanXing/AtABA-DROmiX/issues).  
 
 [(Back to top)](#ataba-dromix)
 
