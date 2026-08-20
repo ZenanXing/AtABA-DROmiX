@@ -1,17 +1,14 @@
+
 display_format <- function(val) {
-  if (is.na(val)) {
-    return(NA_character_)
-  }
-  
-  if (val == "/") {
-    return("/")
-  }
-  
-  val <- as.numeric(val)
-  
-  if (val < 0.01) {
-    formatC(val, format = "E", digits = 2)
+  if (val != "/" && !is.na(val)) {
+    val <- as.numeric(val)
+    if (val < 0.01) {
+      val <- formatC(val, format = "E", digits = 2)
+    } else {
+      val <- format(round(val, digits = 2), nsmall = 2)
+    }
+    return(val)
   } else {
-    format(round(val, digits = 2), nsmall = 2)
+    return("/")
   }
 }
